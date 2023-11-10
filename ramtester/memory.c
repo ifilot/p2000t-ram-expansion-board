@@ -1,4 +1,7 @@
 // set video memory
+__at (0x0000) char MEMORY[];
+char* memory = MEMORY;
+
 __at (0x5000) char VIDMEM[];
 char* vidmem = VIDMEM;
 
