@@ -50,7 +50,8 @@ int main(void) {
         (pass_highmem_0 == 0 && pass_highmem_1 == 0) ? "PASS" : "FAIL");
 
     // test 3: test bankable memory
-    for(uint8_t i=0; i<5; i++) {
+    for(uint8_t i=0; i<6; i++) { // banks 0 - 5
+        set_bank(i);
         uint8_t pass_bankable_memory = test_bankable_memory();
         sprintf(&vidmem[0x50*(5+i)], "Bankable memory (%i: 0xE000-0xFFFF): %s",
             i, (pass_bankable_memory == 0) ? "PASS" : "FAIL");
