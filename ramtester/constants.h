@@ -12,4 +12,8 @@
 #define COL_WHITE   0x07
 #define TEXT_DOUBLE 0x0D
 
+#define GRAPH_GREEN 147
+#define GRAPH_WHITE 151
+#define GRAPH_BLOCK 127
+
 #endif // _CONSTANTS_H
