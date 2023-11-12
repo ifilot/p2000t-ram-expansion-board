@@ -36,14 +36,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build launcher application
+    - name: Build ramtester application
       run: |
         cd ramtester
         sed -i 's/node[0-9]+/node2000000/' Makefile
         make
         mv main.rom RAMTEST.BIN
         truncate -s 16K RAMTEST.BIN
-    - name: Upload launcher
+    - name: Upload ramtester binary
       uses: actions/upload-artifact@v3
       with:
         name: RAMTEST.BIN

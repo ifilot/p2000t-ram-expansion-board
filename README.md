@@ -1,5 +1,10 @@
 # P2000T RAM expansion board
 
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/ifilot/p2000t-ram-expansion-board?label=version)](https://github.com/ifilot/p2000t-ram-expansion-board/releases/tag/v0.1.1)
+[![Build](https://github.com/ifilot/p2000t-ram-expansion-board/actions/workflows/build.yml/badge.svg)](https://github.com/ifilot/p2000t-ram-expansion-board/actions/workflows/build.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: CC-BY-NC-SA-4.0](https://img.shields.io/badge/license-CC--BY--NC--SA--4.0-lightgrey)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)
+
 ## Purpose
 
 Expand the memory of your P2000T by an additional 64kb, giving in total 80kb
