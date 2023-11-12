@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+    branches: [ "master", "develop" ]
+    tags:
+    - 'v*'
+  pull_request:
+    branches: [ "master", "develop" ]
+
+jobs:
+  # (optional) Create release
+  create-release:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+  # Firmware flasher for the SLOT2 cartridge firmware
+  build-ramtester:
+    runs-on: ubuntu-latest
+    container: 
+      image: z88dk/z88dk
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build launcher application
+      run: |
+        cd ramtester
+        sed -i 's/node[0-9]+/node2000000/' Makefile
+        make
+        mv main.rom RAMTEST.BIN
+        truncate -s 16K RAMTEST.BIN
+    - name: Upload launcher
+      uses: actions/upload-artifact@v3
+      with:
+        name: RAMTEST.BIN
+        path: ramtester/RAMTEST.BIN
+
+  deploy-ramtester-rom:
+    runs-on: ubuntu-latest
+    needs: [build-ramtester, create-release]
+    permissions: write-all
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: RAMTEST.BIN
+        path: ./
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: RAMTEST.BIN
+        asset_name: RAMTEST.BIN
+        asset_content_type: application/octet-stream
