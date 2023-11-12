@@ -108,6 +108,32 @@ the status of the bank register.
 
 ![Populated RAM board](img/ram_expansion_board_02.png)
 
+## Testing bank switching in BASIC
+
+If you want to test the bank switching functionality in BASIC, you can use
+the following instructions after booting the machine.
+
+First, we need to set the top of BASIC to `0x9000`.
+
+```
+CLEAR 50,&H9000
+```
+
+The reason we do this is to ensure that the stack is not residing at the
+top 8kb because those bytes will become inaccessible after bank switching. Next,
+we will execute the bank switching by writing a value to the bank register using
+I/O port `0x94`
+
+```
+OUT &H94,1
+```
+
+If everything went accordingly, you should now have swapped from bank 0 to bank 1.
+If you have soldered the SMD LEDs to your PCB, you should see the first LED
+turned on. You can set any value between `0-5`. Values above `5` will also be
+written to the bank register, but only the lower 3 bits are actually used.
+(see also the schematic)
+
 ## Files
 
 * [KiCad schematics](pcb/p2000t-ram-expansion-board)
