@@ -2386,7 +2386,6 @@
     )
   )
 
-
   (junction (at 201.295 125.73) (diameter 0) (color 0 0 0 0)
     (uuid 0ff6a987-7cc8-4214-9310-cb607f0aac0a)
   )
@@ -3308,6 +3307,13 @@
       (effects (font (size 1 1)) (justify left) hide)
     )
   )
+  (global_label "A13" (shape input) (at 227.33 37.465 180) (fields_autoplaced)
+    (effects (font (size 1 1)) (justify right))
+    (uuid 6aefa580-8300-4744-9496-731f684e2439)
+    (property "Intersheet References" "${INTERSHEET_REFS}" (id 0) (at 222.6681 37.5275 0)
+      (effects (font (size 1 1)) (justify right) hide)
+    )
+  )
   (global_label "A0" (shape input) (at 33.655 45.085 180) (fields_autoplaced)
     (effects (font (size 1 1)) (justify right))
     (uuid 6c3e6221-7562-442b-a88e-8f3268452a83)
@@ -4120,24 +4126,6 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (pin "1" (uuid 4e8bc325-7d5d-408a-855f-8e1b91fea88a))
-  )
-
-  (symbol (lib_id "power:GND") (at 227.33 37.465 270) (unit 1)
-    (in_bom yes) (on_board yes)
-    (uuid 174e448f-68cc-4579-b8da-d300cab8464d)
-    (property "Reference" "#PWR047" (id 0) (at 220.98 37.465 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (id 1) (at 220.345 37.465 90)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "" (id 2) (at 227.33 37.465 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (id 3) (at 227.33 37.465 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 0b4ea861-e632-4465-9a17-1eb9bc0b87b7))
   )
 
   (symbol (lib_id "74xx:74HC00") (at 271.145 141.605 0) (unit 2)
@@ -6032,9 +6020,6 @@
     )
     (path "/6e98a432-4221-4674-8156-e0296f61e657"
       (reference "#PWR046") (unit 1) (value "GND") (footprint "")
-    )
-    (path "/174e448f-68cc-4579-b8da-d300cab8464d"
-      (reference "#PWR047") (unit 1) (value "GND") (footprint "")
     )
     (path "/61fa287c-bcbb-4d71-8ae2-e91e01adf32a"
       (reference "#PWR048") (unit 1) (value "GND") (footprint "")
