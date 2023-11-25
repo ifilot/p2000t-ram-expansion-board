@@ -29,6 +29,7 @@ uint8_t test_lowmem(void);
 uint8_t test_highmem(void);
 uint8_t test_bankable_memory(void);
 void set_bank(uint8_t bank);
+uint8_t read_bank(void);
 void write_stack_pointer(void);
 
 int main(void) {
@@ -39,68 +40,128 @@ int main(void) {
     uint8_t nrchars = sprintf(&vidmem[0x50 * TITLELINE + 2], "RAM TESTER");
     vidmem[0x50*TITLELINE + 2 + nrchars] = COL_NONE;
 
-    // test 1: check lowmem and verify that it is unaffected by bank value
-    sprintf(&vidmem[0x50*STATUSLINE], "Testing lower memory...");
-    set_bank(0);
-    uint8_t pass_lowmem_0 = test_lowmem();
-    set_bank(1);
-    uint8_t pass_lowmem_1 = test_lowmem();
 
-    sprintf(&vidmem[0x50*STARTLINE], "Low memory (0x%04X-0x%04X):%c%s",
-        LOWMEM, STACK,
-        (pass_lowmem_0 == 0 && pass_lowmem_1 == 0) ? COL_GREEN : COL_RED,
-        (pass_lowmem_0 == 0 && pass_lowmem_1 == 0) ? "PASS" : "FAIL");
-    clearline(STATUSLINE);
+    // Test 1: Upper memory
+    sprintf(&vidmem[0x50 * STARTLINE], "Test 1: Upper memory");
+    for(uint8_t i=0xA; i<=0xD; i++) {
 
-    // test 2: check highmem and verify that it is unaffected by bank value
-    sprintf(&vidmem[0x50*STATUSLINE], "Testing upper memory...");
-    set_bank(0);
-    uint8_t pass_highmem_0 = test_highmem();
-    set_bank(1);
-    uint8_t pass_highmem_1 = test_highmem();
+        memory[i * 0x1000] = 0x55;
 
-    sprintf(&vidmem[0x50*(STARTLINE+1)], "Upper memory (0xA000-0xDFFF):%c%s",
-        (pass_highmem_0 == 0 && pass_highmem_1 == 0) ? COL_GREEN : COL_RED,
-        (pass_highmem_0 == 0 && pass_highmem_1 == 0) ? "PASS" : "FAIL");
-    clearline(STATUSLINE);
-
-    // test 3: test bankable memory
-    sprintf(&vidmem[0x50*STATUSLINE], "Testing bankable memory...");
-    for(uint8_t i=0; i<6; i++) { // banks 0 - 5
-        set_bank(i);
-        uint8_t pass_bankable_memory = test_bankable_memory();
-        sprintf(&vidmem[0x50*(STARTLINE+2+i)], "Bankable memory (%i: 0xE000-0xFFFF):%c%s",
-            i,
-            (pass_bankable_memory == 0) ? COL_GREEN : COL_RED,
-            (pass_bankable_memory == 0) ? "PASS" : "FAIL");
-    }
-    clearline(STATUSLINE);
-
-    // test 4: bank switching while data is stored
-    sprintf(&vidmem[0x50*STATUSLINE], "Testing bank switching...");
-    for(uint8_t i=0; i<6; i++) { // banks 0 - 5
-        // first write the bank number to all the banked memory
-        set_bank(i);
-        for(uint16_t j=0xE000; j<0xFFFF; j++) {
-            memory[j] = i;
-        }
-    }
-
-    uint8_t pass_bank_switching = 0;
-    for(uint8_t i=0; i<6; i++) { // banks 0 - 5
-        // then check that the memory has been retained over the banks
-        set_bank(i);
-        for(uint16_t j=0xE000; j<0xFFFF; j++) {
-            if(memory[j] != i) {
-                pass_bank_switching |= (1 << i);
-                break; // break the loop on a fail
+        for(uint8_t j=0xA; j<=0xD; j++) {
+            if(i == j) {
+                continue;
             }
+            memory[j * 0x1000] = 0x00;
         }
+
+        if(memory[i * 0x1000] == 0x55) {
+            vidmem[0x50 * (STARTLINE+1)+(i-0xA)*5] = COL_GREEN;
+        } else {
+            vidmem[0x50 * (STARTLINE+1)+(i-0xA)*5] = COL_RED;
+        }
+        sprintf(&vidmem[0x50 * (STARTLINE+1)+(i-0xA)*5+1], "%04X", i*0x1000);
     }
-    sprintf(&vidmem[0x50*(STARTLINE+8)], "Bank switching test:%c%s",
-            (pass_bank_switching == 0) ? COL_GREEN : COL_RED,
-            (pass_bank_switching == 0) ? "PASS" : "FAIL");
-    clearline(STATUSLINE);
+
+    // Test2: Bank switching
+    sprintf(&vidmem[0x50 * (STARTLINE+2)], "Test 2: Bank switching");
+    for(uint8_t i=0; i<6; i++) {
+        set_bank(i);
+        memory[0xE000] = i | (1 << 4);
+        memory[0xF000] = i | (1 << 5);
+    }
+
+    for(uint8_t i=0; i<6; i++) {
+        set_bank(i);
+        if(memory[0xE000] == (i | (1 << 4))) {
+            vidmem[0x50 * (STARTLINE+3)+(i*6)] = COL_GREEN;
+        } else {
+            vidmem[0x50 * (STARTLINE+3)+(i*6)] = COL_RED;
+        }
+        sprintf(&vidmem[0x50 * (STARTLINE+3)+(i*6+1)], "%1iE", i);
+
+        if(memory[0xF000] == (i | (1 << 5))) {
+            vidmem[0x50 * (STARTLINE+3)+(i*6+3)] = COL_GREEN;
+        } else {
+            vidmem[0x50 * (STARTLINE+3)+(i*6+3)] = COL_RED;
+        }
+        sprintf(&vidmem[0x50 * (STARTLINE+3)+(i*6+4)], "%1iF", i);
+    }
+
+    // Test 3: Reading bank register
+    sprintf(&vidmem[0x50 * (STARTLINE+4)], "Test 3: Reading bank register");
+    for(uint8_t i=0; i<6; i++) {
+        set_bank(i);
+        if(read_bank() == i) {
+            vidmem[0x50 * (STARTLINE+5)+(i*3)] = COL_GREEN;
+        } else {
+            vidmem[0x50 * (STARTLINE+5)+(i*3)] = COL_RED;
+        }
+        sprintf(&vidmem[0x50 * (STARTLINE+5)+(i*3)+1], "%02i", i);
+    }
+
+
+    // // test 1: check lowmem and verify that it is unaffected by bank value
+    // sprintf(&vidmem[0x50*STATUSLINE], "Testing lower memory...");
+    // set_bank(0);
+    // uint8_t pass_lowmem_0 = test_lowmem();
+    // set_bank(1);
+    // uint8_t pass_lowmem_1 = test_lowmem();
+
+    // sprintf(&vidmem[0x50*STARTLINE], "Low memory (0x%04X-0x%04X):%c%s",
+    //     LOWMEM, STACK,
+    //     (pass_lowmem_0 == 0 && pass_lowmem_1 == 0) ? COL_GREEN : COL_RED,
+    //     (pass_lowmem_0 == 0 && pass_lowmem_1 == 0) ? "PASS" : "FAIL");
+    // clearline(STATUSLINE);
+
+    // // test 2: check highmem and verify that it is unaffected by bank value
+    // sprintf(&vidmem[0x50*STATUSLINE], "Testing upper memory...");
+    // set_bank(0);
+    // uint8_t pass_highmem_0 = test_highmem();
+    // set_bank(1);
+    // uint8_t pass_highmem_1 = test_highmem();
+
+    // sprintf(&vidmem[0x50*(STARTLINE+1)], "Upper memory (0xA000-0xDFFF):%c%s",
+    //     (pass_highmem_0 == 0 && pass_highmem_1 == 0) ? COL_GREEN : COL_RED,
+    //     (pass_highmem_0 == 0 && pass_highmem_1 == 0) ? "PASS" : "FAIL");
+    // clearline(STATUSLINE);
+
+    // // test 3: test bankable memory
+    // sprintf(&vidmem[0x50*STATUSLINE], "Testing bankable memory...");
+    // for(uint8_t i=0; i<6; i++) { // banks 0 - 5
+    //     set_bank(i);
+    //     uint8_t pass_bankable_memory = test_bankable_memory();
+    //     sprintf(&vidmem[0x50*(STARTLINE+2+i)], "Bankable memory (%i: 0xE000-0xFFFF):%c%s",
+    //         i,
+    //         (pass_bankable_memory == 0) ? COL_GREEN : COL_RED,
+    //         (pass_bankable_memory == 0) ? "PASS" : "FAIL");
+    // }
+    // clearline(STATUSLINE);
+
+    // // test 4: bank switching while data is stored
+    // sprintf(&vidmem[0x50*STATUSLINE], "Testing bank switching...");
+    // for(uint8_t i=0; i<6; i++) { // banks 0 - 5
+    //     // first write the bank number to all the banked memory
+    //     set_bank(i);
+    //     for(uint16_t j=0xE000; j<0xFFFF; j++) {
+    //         memory[j] = i;
+    //     }
+    // }
+
+    // uint8_t pass_bank_switching = 0;
+    // for(uint8_t i=0; i<6; i++) { // banks 0 - 5
+    //     // then check that the memory has been retained over the banks
+    //     set_bank(i);
+    //     for(uint16_t j=0xE000; j<0xFFFF; j++) {
+    //         if(memory[j] != i) {
+    //             pass_bank_switching |= (1 << i);
+    //             break; // break the loop on a fail
+    //         }
+    //     }
+    // }
+    // sprintf(&vidmem[0x50*(STARTLINE+8)], "Bank switching test:%c%s",
+    //         (pass_bank_switching == 0) ? COL_GREEN : COL_RED,
+    //         (pass_bank_switching == 0) ? "PASS" : "FAIL");
+    // clearline(STATUSLINE);
 
     vidmem[0x50 * STATUSLINE] = TEXT_DOUBLE;
     vidmem[0x50 * STATUSLINE+1] = COL_GREEN;
@@ -212,6 +273,10 @@ void set_bank(uint8_t bank) {
     vidmem[16] = 137; // non-blinking
     sprintf(&vidmem[16], "Bank register: |%s| (%i)", char_bits, bank);
     write_stack_pointer();
+}
+
+uint8_t read_bank(void) {
+    return z80_inp(0x94);
 }
 
 void write_stack_pointer(void) {
