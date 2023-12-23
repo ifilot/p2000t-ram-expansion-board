@@ -103,11 +103,11 @@ the status of the bank register.
 
 **Unpopulated PCB**
 
-![Populated RAM board](img/ram_expansion_board_01.png)
+![Populated RAM board](img/ram_expansion_board_01.jpg)
 
 **Populated PCB**
 
-![Populated RAM board](img/ram_expansion_board_02.png)
+![Populated RAM board](img/ram_expansion_board_02.jpg)
 
 ## Testing bank switching in BASIC
 
