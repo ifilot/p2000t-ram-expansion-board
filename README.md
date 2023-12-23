@@ -88,6 +88,7 @@ additional logic chips, the line decoding and bank switching is handled.
 * 1x74HC157 (quad 2-input multiplexer)
 * 1x74HC173 (quad positive edge triggered D-type flip-flop)
 * 1x74HC688 (8-bit magnitude comparator)
+* 1x74HC245 (octal bus transceiver)
 * 2x62256 (32kb SRAM)
 * 1x220uF capacitor (100uF also works)
 * 8x0.1uF capacitor
@@ -102,11 +103,11 @@ the status of the bank register.
 
 **Unpopulated PCB**
 
-![Populated RAM board](img/ram_expansion_board_01.png)
+![Populated RAM board](img/ram_expansion_board_01.jpg)
 
 **Populated PCB**
 
-![Populated RAM board](img/ram_expansion_board_02.png)
+![Populated RAM board](img/ram_expansion_board_02.jpg)
 
 ## Testing bank switching in BASIC
 
