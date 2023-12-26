@@ -1,6 +1,8 @@
 #
 # Quick upload method to development cartridge
 #
+# Requirements: pyserial and tqdm modules
+#
 
 import numpy as np
 import serial
