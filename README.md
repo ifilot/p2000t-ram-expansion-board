@@ -67,10 +67,9 @@ Consult the image below for the correct voltages between the pins.
 This repository comes bundled with a RAM testing utility. Write the RAM testing
 utility to a SLOT1 cartridge and boot your P2000T with this program in SLOT1.
 The RAM testing utility will perform an extensive test of the memory and show
-any errors it encounters. Click on the image below for an impression how the
-RAM testing utility works.
+any errors it encounters.
 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Ns-kiFVtkk4/0.jpg)](https://www.youtube.com/watch?v=Ns-kiFVtkk4)
+![completed RAM test](img/ramtester.png)
 
 ## Schematic
 
