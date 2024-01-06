@@ -95,11 +95,6 @@ additional logic chips, the line decoding and bank switching is handled.
 * 1x 40 pin female pin header (2x20 pins; 2.54mm spacing)
 * 1x screw terminal
 
-Optionally, you can install the following SMD components. These will indicate
-the status of the bank register.
-* 3x 0805 SMD LED
-* 3x 0805 330 Ohm resistor
-
 **Unpopulated PCB**
 
 ![Populated RAM board](img/ram_expansion_board_01.jpg)
@@ -121,18 +116,32 @@ CLEAR 50,&H9000
 
 The reason we do this is to ensure that the stack is not residing at the
 top 8kb because those bytes will become inaccessible after bank switching. Next,
-we will execute the bank switching by writing a value to the bank register using
-I/O port `0x94`
+we will first write a value to memory address `0xE000`, check that this value
+is properly written, change to another bank and read from the same memory address.
+A different value should be returned (typically 0). Next, we write a different
+value to the `0xE000` and change bank to the initial bank. The original value should 
+now be correctly retrieved. The procedure is performed using the following (very small)
+snippet of BASIC code.
 
 ```
-OUT &H94,1
+10 POKE &HE000,42
+20 PRINT(PEEK(&HE000))
+30 OUT &H94,1
+40 PRINT(PEEK(&HE000))
+50 POKE &HE000,43
+60 OUT &H94,0
+70 PRINT(PEEK(&HE000))
 ```
+After entering in these instructions, type `RUN`. The output of this code should be
+something similar to the code as shown below. The second value might be potentially
+different, depending on earlier memory operations, though is expected to be a zero
+on a fresh boot of the machine.
 
-If everything went accordingly, you should now have swapped from bank 0 to bank 1.
-If you have soldered the SMD LEDs to your PCB, you should see the first LED
-turned on. You can set any value between `0-5`. Values above `5` will also be
-written to the bank register, but only the lower 3 bits are actually used.
-(see also the schematic)
+```
+42
+0
+42
+```
 
 ## Files
 
