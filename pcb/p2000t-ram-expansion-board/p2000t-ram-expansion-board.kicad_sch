@@ -7,7 +7,7 @@
   (title_block
     (title "P2000T RAM expansion board")
     (date "2023-11-16")
-    (rev "2")
+    (rev "3")
   )
 
   (lib_symbols
@@ -2386,7 +2386,6 @@
     )
   )
 
-
   (junction (at 201.295 125.73) (diameter 0) (color 0 0 0 0)
     (uuid 0ff6a987-7cc8-4214-9310-cb607f0aac0a)
   )
@@ -2472,6 +2471,10 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 0265f076-45b9-41df-b8fe-ec5993e5a3d1)
   )
+  (polyline (pts (xy 85.09 179.07) (xy 85.09 196.85))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid 0380634b-f7fb-4556-856c-4ff06f99c2fe)
+  )
 
   (wire (pts (xy 227.33 61.595) (xy 227.33 62.865))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -2513,6 +2516,10 @@
   (wire (pts (xy 166.37 177.165) (xy 164.465 177.165))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 2185ddc1-58ce-47e8-be9d-8197e22bffaa)
+  )
+  (polyline (pts (xy 114.3 179.07) (xy 85.09 179.07))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid 23081aeb-3370-42d5-9dff-9eda098cba48)
   )
   (polyline (pts (xy 87.63 13.335) (xy 87.63 104.775))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -2877,7 +2884,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 4995541c-2909-42ac-8d85-dac773f50b54)
   )
-  (text "Because of timing\ncontraints, ~{WR}\nneeds to be combined\nwith ~{P=Q}"
+  (text "Because of timing\ncontraints, ~{WR}\nneeds to be combined\nwith ~{P=R}"
     (at 175.26 74.676 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 685871be-b488-4dfd-b79d-926e3114511c)
@@ -2917,6 +2924,10 @@
   (text "32 kb static memory" (at 27.305 124.841 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 9bf8ca38-b524-49bc-9ad2-fe5fb250dee5)
+  )
+  (text "Tie unused gates to GND" (at 86.36 196.85 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid a03a1491-c5f0-48a7-89c5-dddd52ebe9b7)
   )
   (text "A13_2 and A14_2 can be\ndirectly tied to S0 and S2,\nbut this set-up gives\nbuffering."
     (at 248.92 72.136 0)
@@ -2971,10 +2982,10 @@
       (effects (font (size 1 1)) (justify right) hide)
     )
   )
-  (global_label "~{P=Q}" (shape input) (at 143.51 62.23 270) (fields_autoplaced)
+  (global_label "~{P=R}" (shape input) (at 143.51 62.23 270) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid 0c6846f6-365f-457c-9783-dec82a2125b3)
-    (property "Intersheet References" "${INTERSHEET_REFS}" (id 0) (at 143.4306 68.816 90)
+    (property "Intersheet References" "${INTERSHEET_REFS}" (id 0) (at 143.4306 68.7555 90)
       (effects (font (size 1.27 1.27)) (justify right) hide)
     )
   )
