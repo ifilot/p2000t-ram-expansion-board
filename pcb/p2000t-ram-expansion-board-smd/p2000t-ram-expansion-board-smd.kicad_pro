@@ -354,7 +354,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "p2000t-ram-expansion-board.kicad_pro",
+    "filename": "p2000t-ram-expansion-board-smd.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -389,7 +389,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "specctra_dsn": "p2000t-ram-expansion-board.dsn",
+      "specctra_dsn": "p2000t-ram-expansion-board-smd.dsn",
       "step": "",
       "vrml": ""
     },
