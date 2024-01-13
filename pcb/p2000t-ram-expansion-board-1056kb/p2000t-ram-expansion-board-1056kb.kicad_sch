@@ -6,8 +6,8 @@
 
   (title_block
     (title "P2000T RAM expansion board")
-    (date "2023-11-16")
-    (rev "3")
+    (date "2024-01-13")
+    (rev "0")
   )
 
   (lib_symbols

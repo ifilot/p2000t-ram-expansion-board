@@ -32,3 +32,7 @@ fp-info-cache
 *.pdf
 *.rules
 *.svg
+
+# lock and step files
+*.lck
+*.step
