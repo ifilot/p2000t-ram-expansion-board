@@ -14,7 +14,7 @@ of memory. This board uses modern components which are all still in production.
 
 > [!TIP]
 > There is also a 1056kb expansion to have more than a Mb of RAM in your
-> P2000T. Scroll down to the bottom of this page for more information.
+> P2000T. Scroll down [to the bottom of this page](#1056kb-expansion) for more information.
 
 ## Memory lay-out
 
@@ -101,7 +101,7 @@ additional logic chips, the line decoding and bank switching is handled.
 
 **Unpopulated PCB**
 
-![Populated RAM board](img/ram_expansion_board_01.jpg)
+![Unpopulated RAM board](img/ram_expansion_board_01.jpg)
 
 **Populated PCB**
 
@@ -164,8 +164,17 @@ the banking for the 8kb of memory.
 
 The source files for this board can be found [here](pcb/p2000t-ram-expansion-board-1056kb/).
 
-![Populated RAM board](img/ram_expansion_board_1056_04.jpg)
+**Unpopulated PCB**
+
 ![Unpopulated RAM board](img/ram_expansion_board_1056_05.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_1056_04.jpg)
+
+**Installed PCB**
+
+![Populated RAM board](img/ram_expansion_board_1056_01.jpg)
 
 ## License
 
