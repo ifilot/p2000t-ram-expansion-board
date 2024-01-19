@@ -12,6 +12,10 @@ of memory. This board uses modern components which are all still in production.
 
 ![ram expansion board](img/ram_expansion_placement_02.jpg)
 
+> [!TIP]
+> There is also a 1056kb expansion to have more than a Mb of RAM in your
+> P2000T. Scroll down to the bottom of this page for more information.
+
 ## Memory lay-out
 
 The memory lay-out of the P2000T is organized as shown in the table below
@@ -147,6 +151,21 @@ on a fresh boot of the machine.
 
 * [KiCad schematics](pcb/p2000t-ram-expansion-board)
 * [RAM tester utility](ramtester)
+
+## 1056kb expansion
+
+Besides the 64kb expansion, this repository also contains a specialty version
+of the board to expand your P2000T with 1056kb of memory. This board uses
+a single 32kb static RAM chip to provide 2x16kb on `0xA000-0xDFFF` and 
+two 512kb static RAM chips to provide another 128x8kb on `0xE000-0xFFFF`. The
+way this board works is very similar to the regular 64kb board. The highest
+bit in the bank register toggle the 16kb banking while the lower 7 bits provide
+the banking for the 8kb of memory.
+
+The source files for this board can be found [here](pcb/p2000t-ram-expansion-board-1056kb/).
+
+![Populated RAM board](img/ram_expansion_board_1056_04.jpg)
+![Unpopulated RAM board](img/ram_expansion_board_1056_05.jpg)
 
 ## License
 
