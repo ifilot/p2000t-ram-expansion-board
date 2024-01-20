@@ -166,11 +166,11 @@ The source files for this board can be found [here](pcb/p2000t-ram-expansion-boa
 
 **Unpopulated PCB**
 
-![Unpopulated RAM board](img/ram_expansion_board_1056_05.jpg)
+![Unpopulated RAM board](img/ram_expansion_board_1056_05.png)
 
 **Populated PCB**
 
-![Populated RAM board](img/ram_expansion_board_1056_04.jpg)
+![Populated RAM board](img/ram_expansion_board_1056_04.png)
 
 **Installed PCB**
 
