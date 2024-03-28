@@ -22,6 +22,9 @@
  * This short application will perform a set of tests on the RAM expansion
  * board of a P2000T. Note that this application assumes that the stack starts
  * at location 0x9FFF and grows downwards (i.e. with decreasing memory address).
+ *
+ * This program works for both the 64kb expansion board as well as the
+ * 1056kb expansion board.
  */
 
 #include <string.h>
@@ -66,6 +69,7 @@ int main(void) {
     vidmem[0x50*TITLELINE+1] = COL_CYAN;
     uint8_t nrchars = sprintf(&vidmem[0x50 * TITLELINE + 2], "RAM TESTER");
     vidmem[0x50*TITLELINE + 2 + nrchars] = COL_NONE;
+    uint8_t mem1056 = 0;
 
     // keep track of line number
     uint8_t linenr = STARTLINE;
@@ -105,6 +109,9 @@ int main(void) {
      * Perform another quick test where a byte is written to 0xE000 and 0xF000
      * where the value written depends on the currently active bank switch. Next,
      * each bank is tested for being able to read this value back.
+     *
+     * This test is also used to determine whether the user has a 64kb
+     * or a 1056 kb expansion board.
      */
     linenr++;
     sprintf(&vidmem[0x50 * (linenr)], "Test 2: Bank switching");
@@ -132,6 +139,30 @@ int main(void) {
         sprintf(&vidmem[0x50 * linenr+(i*6+4)], "%1iF", i);
     }
 
+    // check whether this assessment can be continued to 128 banks
+    for(uint8_t i=0; i<128; i++) {
+        set_bank(i);
+        memory[0xE000] = i;
+        memory[0xF000] = i | 0x80;
+    }
+
+    uint8_t validbanks = 0;
+    for(uint8_t i=0; i<128; i++) {
+        set_bank(i);
+        if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
+            validbanks++;
+        }
+    }
+
+    if(validbanks == 128) {
+        uint8_t mem1056 = 1;
+        memset(&vidmem[0x50 * linenr], 0, 0x50);
+        vidmem[0x50 * linenr] = COL_GREEN;
+        sprintf(&vidmem[0x50 * linenr +1 ], "-- 1056kb expansion detected --");
+    } else {
+        validbanks = NUMBANKS;
+    }
+
     /*
      * Test 3: Reading bank register
      * =============================
@@ -142,14 +173,22 @@ int main(void) {
     linenr++;
     sprintf(&vidmem[0x50 * linenr], "Test 3: Reading bank register");
     linenr++;
-    for(uint8_t i=0; i<NUMBANKS; i++) {
+    uint8_t bankschecked = 0;
+    for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
+        
         if(read_bank() == i) {
-            vidmem[0x50 * linenr+(i*3)] = COL_GREEN;
+            bankschecked++;
+        }
+
+        if(bankschecked == (i+1)) {
+            vidmem[0x50 * linenr] = COL_GREEN;
         } else {
             vidmem[0x50 * linenr+(i*3)] = COL_RED;
         }
-        sprintf(&vidmem[0x50 * linenr+(i*3)+1], "%02i", i);
+
+        memset(&vidmem[0x50 * linenr+1], 0x00, 40);
+        sprintf(&vidmem[0x50 * linenr+1], "Valid bank responses: %i / %i", bankschecked, validbanks);
     }
 
     /*
@@ -164,6 +203,7 @@ int main(void) {
     sprintf(&vidmem[0x50 * linenr], "Test 4: Lower and upper memory");
     linenr++;
 
+    set_bank(0x00);
     uint8_t lowmem_flag_ok = test_memory(LOWMEM, STACK, 0x55, 0x50 * linenr + 25) |
                              test_memory(LOWMEM, STACK, 0xAA, 0x50 * linenr + 25);
 
@@ -174,16 +214,35 @@ int main(void) {
     }
     sprintf(&vidmem[0x50 * linenr+1], "0x%04X-0x%04X", LOWMEM, STACK);
 
+    linenr++;
+
     uint8_t highmem_flag = test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0x55, 0x50 * linenr + 25) |
                            test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0xAA, 0x50 * linenr + 25);
 
     if(highmem_flag == 0) {
-        vidmem[0x50 * linenr+14] = COL_GREEN;
+        vidmem[0x50 * linenr] = COL_GREEN;
     } else {
-        vidmem[0x50 * linenr+14] = COL_RED;
+        vidmem[0x50 * linenr] = COL_RED;
     }
-    sprintf(&vidmem[0x50 * linenr + 15], "0x%04X-0x%04X", HIGHMEM_START, HIGHMEM_STOP);
+    sprintf(&vidmem[0x50 * linenr + 1], "0x%04X-0x%04X (BIT 0)", HIGHMEM_START, HIGHMEM_STOP);
     memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
+
+    linenr++;
+
+    if(validbanks == 128) {
+        set_bank(0x80);
+        uint8_t highmem_flag = test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0x55, 0x50 * linenr + 25) |
+                               test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0xAA, 0x50 * linenr + 25);
+        if(highmem_flag == 0) {
+            vidmem[0x50 * linenr] = COL_GREEN;
+        } else {
+            vidmem[0x50 * linenr] = COL_RED;
+        }
+        sprintf(&vidmem[0x50 * linenr + 1], "0x%04X-0x%04X (BIT 1)", HIGHMEM_START, HIGHMEM_STOP);
+        memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
+
+        set_bank(0x00);
+    }
 
     /*
      * Test 5: Bank invariant memory check
@@ -230,44 +289,53 @@ int main(void) {
     linenr++;
 
     // test immediate writing and reading back
-    for(uint8_t i=0; i<NUMBANKS; i++) {
+    bankschecked = 0;
+    for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
-        uint8_t testflag_bank = test_memory(BANKMEM_START, BANKMEM_STOP, 0x50 | i, 0x50 * linenr + 25) |
-                                test_memory(BANKMEM_START, BANKMEM_STOP, 0xA0 | i, 0x50 * linenr + 25);
+        uint8_t testflag_bank = test_memory(BANKMEM_START, BANKMEM_STOP, 0x80 | i, 0x50 * linenr + 25);
         
         if(testflag_bank == 0) {
-            vidmem[0x50 * linenr+(i*3)] = COL_GREEN;
-        } else {
-            vidmem[0x50 * linenr+(i*3)] = COL_RED;
+            bankschecked++;
         }
-        sprintf(&vidmem[0x50 * linenr+(i*3)+1], "%02i", i);
+
+        if(bankschecked == (i+1)) {
+            vidmem[0x50 * linenr] = COL_GREEN;
+        } else {
+            vidmem[0x50 * linenr] = COL_RED;
+        }
+
+        sprintf(&vidmem[0x50 * linenr+1], "(T1) Bank: %i / %i", i+1, validbanks);
     }
-    memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
 
     linenr++;
 
     // test preservation in second loop
-    for(uint8_t i=0; i<NUMBANKS; i++) {
+    bankschecked = 0;
+    for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
-        uint8_t testflag_bank = read_memory(BANKMEM_START, BANKMEM_STOP, 0xA0 | i, 0x50 * linenr + 25);
+        uint8_t testflag_bank = read_memory(BANKMEM_START, BANKMEM_STOP, 0x80 | i, 0x50 * linenr + 25);
         
         if(testflag_bank == 0) {
-            vidmem[0x50 * linenr+(i*3)] = COL_GREEN;
-        } else {
-            vidmem[0x50 * linenr+(i*3)] = COL_RED;
+            bankschecked++;
         }
-        sprintf(&vidmem[0x50 * linenr+(i*3)+1], "%02i", i);
+
+        if(bankschecked == (i+1)) {
+            vidmem[0x50 * linenr] = COL_GREEN;
+        } else {
+            vidmem[0x50 * linenr] = COL_RED;
+        }
+
+        sprintf(&vidmem[0x50 * linenr+1], "(T2) Bank: %i / %i", i+1, validbanks);
     }
-    memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
 
     /*
      * Done testing
      * ============
      */
 
-    vidmem[0x50 * STATUSLINE] = TEXT_DOUBLE;
-    vidmem[0x50 * STATUSLINE+1] = COL_GREEN;
-    sprintf(&vidmem[0x50 * STATUSLINE+2], "TESTS COMPLETED");
+    linenr++;
+    vidmem[0x50 * linenr] = COL_GREEN;
+    sprintf(&vidmem[0x50 * linenr+1], "TESTS COMPLETED");
 
     return 0;
 }
@@ -282,19 +350,20 @@ void set_bank(uint8_t bank) {
     z80_outp(0x94, bank);
 
     // placeholder for bit pattern (terminating char = 0)
-    uint8_t char_bits[4] = {' ',' ',' ',0};
+    uint8_t char_bits[9] = {' ',' ',' ',' ',' ',' ',' ',' ',0};
 
     // build bit pattern
-    for(uint8_t i=0; i<3; i++) {
+    for(uint8_t i=0; i<8; i++) {
         if((bank & (1 << i)) != 0) {
-            char_bits[2-i] = GRAPH_BLOCK;
+            char_bits[7-i] = GRAPH_BLOCK;
         } else {
-            char_bits[2-i] = ' '; // write space
+            char_bits[7-i] = ' '; // write space
         }
     }
 
-    vidmem[16] = 137; // non-blinking
-    sprintf(&vidmem[16], "Bank register: |%s| (%i)", char_bits, bank);
+    memset(vidmem, 0, 40);
+    vidmem[0x00] = COL_MAGENTA;
+    sprintf(&vidmem[1], "Bank register: |%s| (%i)", char_bits, bank);
     write_stack_pointer();
 }
 
@@ -312,7 +381,8 @@ uint8_t read_bank(void) {
  */
 void write_stack_pointer(void) {
     uint16_t stackptr = get_stack_pointer();
-    sprintf(&vidmem[0x50 + 16], "Stack pointer: %04X", stackptr);
+    vidmem[0x50] = COL_MAGENTA;
+    sprintf(&vidmem[0x50+1], "Stack pointer: %04X", stackptr);
 }
 
 /**
