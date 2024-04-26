@@ -421,9 +421,7 @@ void write_memory(const uint16_t start, const uint16_t stop,
 
     // write value to memory
     for(uint16_t i=start; i<stop; i+=0x100) {
-        for(uint16_t j=0; j<0x100; j++) {
-            memory[i+j] = testbyte;
-        }
+        memset(&memory[i], testbyte, 0x100);
         vidmem[progressbyte] = COL_WHITE;
         sprintf(&vidmem[progressbyte+1], "(W:%02Xxx:%02X)", (i >> 8 & 0xFF), testbyte);
 
@@ -435,7 +433,7 @@ void write_memory(const uint16_t start, const uint16_t stop,
 }
 
 /**
- * @brief Test that a byte has been succesfully written to memory locations
+ * @brief Test that a byte has been successfully written to memory locations
  * 
  * @param start start position in memory
  * @param stop stop position in memory

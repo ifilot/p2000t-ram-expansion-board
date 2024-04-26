@@ -13,5 +13,6 @@ main.bin main.map main.rom: main.c util.c memory.c stack.asm
 	-pragma-define:CRT_INCLUDE_PREAMBLE=1 \
 	-pragma-define:CLIB_FOPEN_MAX=0 \
 	--max-allocs-per-node2000 \
+	--list \
 	-SO3 -bn main.bin \
 	-create-app -m
