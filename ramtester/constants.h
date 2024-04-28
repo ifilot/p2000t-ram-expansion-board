@@ -36,4 +36,6 @@
 #define GRAPH_WHITE 151
 #define GRAPH_BLOCK 127
 
+#define INPUTLENGTH 40
+
 #endif // _CONSTANTS_H

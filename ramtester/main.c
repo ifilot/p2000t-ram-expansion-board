@@ -39,6 +39,8 @@
 #include "util.h"
 #include "stack.h"
 #include "z80.h"
+#include "ramtest.h"
+#include "terminal.h"
 
 #define TITLELINE 2
 #define STARTLINE 5
@@ -53,26 +55,10 @@ uint8_t read_bank(void);
 
 void write_stack_pointer(void);
 
-uint8_t test_memory(const uint16_t start, const uint16_t stop, 
-                    uint8_t testbyte, const uint16_t progressbyte);
-
-void write_memory(const uint16_t start, const uint16_t stop, 
-                  uint8_t testbyte, const uint16_t progressbyte);
-
-uint8_t read_memory(const uint16_t start, const uint16_t stop, 
-                    uint8_t testbyte, const uint16_t progressbyte);
-
 int main(void) {
     init();
 
-    vidmem[0x50*TITLELINE] = TEXT_DOUBLE;
-    vidmem[0x50*TITLELINE+1] = COL_CYAN;
-    uint8_t nrchars = sprintf(&vidmem[0x50 * TITLELINE + 2], "RAM TESTER");
-    vidmem[0x50*TITLELINE + 2 + nrchars] = COL_NONE;
-    uint8_t mem1056 = 0;
-
-    // keep track of line number
-    uint8_t linenr = STARTLINE;
+    uint8_t flag_mem1056 = 0; // whether system contains 1056kb of memory
 
     /*
      * Test 1: Test upper memory
@@ -81,8 +67,7 @@ int main(void) {
      * Perform a quick test where 0x55 is written to 0xA000, 0xB000, 0xC000,
      * and 0xD000 and where it is checked that this byte can be read back.
      */
-    sprintf(&vidmem[0x50 * linenr], "Test 1: Upper memory");
-    linenr++;
+    print_info("Test 1: Upper memory", 0);
     for(uint8_t i=0xA; i<=0xD; i++) {
 
         memory[i * 0x1000] = 0x55;
@@ -95,12 +80,12 @@ int main(void) {
         }
 
         if(memory[i * 0x1000] == 0x55) {
-            vidmem[0x50 * linenr + (i - 0xA)*5] = COL_GREEN;
+            sprintf(&termbuffer[(i - 0xA)*6], "%c%04X%c", COL_GREEN, i * 0x1000, COL_WHITE);
         } else {
-            vidmem[0x50 * linenr + (i - 0xA)*5] = COL_RED;
+            sprintf(&termbuffer[(i - 0xA)*6], "%c%04X%c", COL_RED, i * 0x1000, COL_WHITE);
         }
-        sprintf(&vidmem[0x50 * linenr + (i - 0xA) * 5 + 1], "%04X", i * 0x1000);
     }
+    terminal_printtermbuffer();
 
     /*
      * Test 2: Bank switching
@@ -113,31 +98,22 @@ int main(void) {
      * This test is also used to determine whether the user has a 64kb
      * or a 1056 kb expansion board.
      */
-    linenr++;
-    sprintf(&vidmem[0x50 * (linenr)], "Test 2: Bank switching");
+    print_info("Test 2: Bank switching", 0);
     for(uint8_t i=0; i<6; i++) {
         set_bank(i);
         memory[0xE000] = i | (1 << 4);
         memory[0xF000] = i | (1 << 5);
     }
 
-    linenr++;
     for(uint8_t i=0; i<NUMBANKS; i++) {
         set_bank(i);
-        if(memory[0xE000] == (i | (1 << 4))) {
-            vidmem[0x50 * linenr+(i*6)] = COL_GREEN;
+        if(memory[0xE000] == (i | (1 << 4)) && memory[0xF000] == (i | (1 << 5))) {
+            sprintf(&termbuffer[i*4], "%c%02i%c", COL_GREEN, i, COL_WHITE);
         } else {
-            vidmem[0x50 * linenr+(i*6)] = COL_RED;
-        }
-        sprintf(&vidmem[0x50 * linenr+(i*6+1)], "%1iE", i);
-
-        if(memory[0xF000] == (i | (1 << 5))) {
-            vidmem[0x50 * linenr+(i*6+3)] = COL_GREEN;
-        } else {
-            vidmem[0x50 * linenr+(i*6+3)] = COL_RED;
-        }
-        sprintf(&vidmem[0x50 * linenr+(i*6+4)], "%1iF", i);
+            sprintf(&termbuffer[i*4], "%c%02i%c", COL_RED, i, COL_WHITE);
+        }        
     }
+    terminal_printtermbuffer();
 
     // check whether this assessment can be continued to 128 banks
     for(uint8_t i=0; i<128; i++) {
@@ -155,10 +131,8 @@ int main(void) {
     }
 
     if(validbanks == 128) {
-        uint8_t mem1056 = 1;
-        memset(&vidmem[0x50 * linenr], 0, 0x50);
-        vidmem[0x50 * linenr] = COL_GREEN;
-        sprintf(&vidmem[0x50 * linenr +1 ], "-- 1056kb expansion detected --");
+        flag_mem1056 = 1;
+        print_info("Note: 1056kb expansion detected", 0);
     } else {
         validbanks = NUMBANKS;
     }
@@ -170,9 +144,7 @@ int main(void) {
      * Final quick test where a value is written to the bank register to swap
      * the bank and check whether that value can be read back.
      */
-    linenr++;
-    sprintf(&vidmem[0x50 * linenr], "Test 3: Reading bank register");
-    linenr++;
+    print_info("Test 3: Reading bank register", 0);
     uint8_t bankschecked = 0;
     for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
@@ -182,14 +154,12 @@ int main(void) {
         }
 
         if(bankschecked == (i+1)) {
-            vidmem[0x50 * linenr] = COL_GREEN;
+            sprintf(&termbuffer[i*4], "%c%02i%c", COL_GREEN, i, COL_WHITE);
         } else {
-            vidmem[0x50 * linenr+(i*3)] = COL_RED;
+            sprintf(&termbuffer[i*4], "%c%02i%c", COL_RED, i, COL_WHITE);
         }
-
-        memset(&vidmem[0x50 * linenr+1], 0x00, 40);
-        sprintf(&vidmem[0x50 * linenr+1], "Valid bank responses: %i / %i", bankschecked, validbanks);
     }
+    terminal_printtermbuffer();
 
     /*
      * Test 4: Test lower and upper memory
@@ -198,146 +168,62 @@ int main(void) {
      * Check that values can be written to and read back from lower and upper
      * memory
      */
+    set_bank(0);
+    print_info("Test 4: Lower and upper memory", 0);
+    memset(&memory[LOWMEM], 0x55, STACK - LOWMEM);
+    uint16_t lowmem_count = count_ram_bytes(&memory[LOWMEM], 0x55, STACK - LOWMEM);
+    memset(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
+    lowmem_count += count_ram_bytes(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
 
-    linenr++;
-    sprintf(&vidmem[0x50 * linenr], "Test 4: Lower and upper memory");
-    linenr++;
-
-    set_bank(0x00);
-    uint8_t lowmem_flag_ok = test_memory(LOWMEM, STACK, 0x55, 0x50 * linenr + 25) |
-                             test_memory(LOWMEM, STACK, 0xAA, 0x50 * linenr + 25);
-
-    if(lowmem_flag_ok == 0) {
-        vidmem[0x50 * linenr] = COL_GREEN;
+    if(lowmem_count == 0) {
+        sprintf(termbuffer, "  %04X - %04X: %cOK", LOWMEM, STACK-1, COL_GREEN);
     } else {
-        vidmem[0x50 * linenr] = COL_RED;
+        sprintf(termbuffer, "  %04X - %04X: %c%u miscounts", LOWMEM, STACK-1, COL_RED, lowmem_count);
     }
-    sprintf(&vidmem[0x50 * linenr+1], "0x%04X-0x%04X", LOWMEM, STACK);
+    terminal_printtermbuffer();
 
-    linenr++;
+    memset(&memory[HIGHMEM_START], 0x55, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uint16_t uppermem_count = count_ram_bytes(&memory[HIGHMEM_START], 0x55, HIGHMEM_STOP - HIGHMEM_START);
+    memset(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START);
 
-    uint8_t highmem_flag = test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0x55, 0x50 * linenr + 25) |
-                           test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0xAA, 0x50 * linenr + 25);
-
-    if(highmem_flag == 0) {
-        vidmem[0x50 * linenr] = COL_GREEN;
+    if(uppermem_count == 0) {
+        sprintf(termbuffer, "  %04X - %04X: %cOK", HIGHMEM_START, HIGHMEM_STOP, COL_GREEN);
     } else {
-        vidmem[0x50 * linenr] = COL_RED;
+        sprintf(termbuffer, "  %04X - %04X: %c%u miscounts", HIGHMEM_START, HIGHMEM_STOP, COL_RED, uppermem_count);
     }
-    sprintf(&vidmem[0x50 * linenr + 1], "0x%04X-0x%04X (BIT 0)", HIGHMEM_START, HIGHMEM_STOP);
-    memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
-
-    linenr++;
-
-    if(validbanks == 128) {
-        set_bank(0x80);
-        uint8_t highmem_flag = test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0x55, 0x50 * linenr + 25) |
-                               test_memory(HIGHMEM_START, HIGHMEM_STOP+1, 0xAA, 0x50 * linenr + 25);
-        if(highmem_flag == 0) {
-            vidmem[0x50 * linenr] = COL_GREEN;
-        } else {
-            vidmem[0x50 * linenr] = COL_RED;
-        }
-        sprintf(&vidmem[0x50 * linenr + 1], "0x%04X-0x%04X (BIT 1)", HIGHMEM_START, HIGHMEM_STOP);
-        memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
-
-        set_bank(0x00);
-    }
+    terminal_printtermbuffer();
 
     /*
-     * Test 5: Bank invariant memory check
+     * Test 5: Bank switchable memory
      * ===================================
      *
-     * Check that memory can be written to and read back from lower and upper
-     * memory that is invariant under a bank switch.
+     * Check that memory is conserved upon bank switching
      */
+    print_info("Test 5: Bank switching memory", 0);
 
-    linenr++;
-    sprintf(&vidmem[0x50 * linenr], "Test 5: Memory invariance");
-    linenr++;
-
-    set_bank(0);
-    write_memory(HIGHMEM_START, HIGHMEM_START+0x1000, 0x55, 0x50 * linenr + 25);
-    write_memory(0x7000, 0x8000, 0x55, 0x50 * linenr + 25);
-    uint8_t test5_flag = 0;
-    for(uint8_t i=1; i<NUMBANKS; i++) {
+    for(uint8_t i=0; i<6; i++) {
         set_bank(i);
-        test5_flag |= read_memory(HIGHMEM_START, HIGHMEM_START+0x1000, 0x55, 0x50 * linenr + 25);
-        test5_flag |= read_memory(0x7000, 0x8000, 0x55, 0x50 * linenr + 25);
+        memset(&memory[BANKMEM_START], 0x55 + i, BANKMEM_STOP - BANKMEM_START + 1);
     }
 
-    if(test5_flag == 0) {
-        vidmem[0x50 * linenr] = COL_GREEN;
-        sprintf(&vidmem[0x50 * linenr+1], "PASS", LOWMEM, STACK);
-    } else {
-        vidmem[0x50 * linenr] = COL_RED;
-        sprintf(&vidmem[0x50 * linenr+1], "FAIL", LOWMEM, STACK);
-    }
-
-    memset(&vidmem[0x50 * linenr + 25], 0x00, 15);
-
-    /*
-     * Test 6: Full banked memory test
-     * ===============================
-     *
-     * Check that memory can be written to and read back from the bankable
-     * memory
-     */
-
-    linenr++;
-    sprintf(&vidmem[0x50 * linenr], "Test 6: Bankable memory");
-    linenr++;
-
-    // test immediate writing and reading back
-    bankschecked = 0;
     for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
-        uint8_t testflag_bank = test_memory(BANKMEM_START, BANKMEM_STOP, 0x80 | i, 0x50 * linenr + 25);
-        
-        if(testflag_bank == 0) {
-            bankschecked++;
-        }
-
-        if(bankschecked == (i+1)) {
-            vidmem[0x50 * linenr] = COL_GREEN;
+        uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], 0x55 + i, BANKMEM_STOP - BANKMEM_START + 1);
+        if(miscounts == 0) {
+            sprintf(&termbuffer[(i % 8) * 4], "%c%02X%c", COL_GREEN, i, COL_WHITE);
         } else {
-            vidmem[0x50 * linenr] = COL_RED;
+            sprintf(&termbuffer[(i % 8) * 4], "%c%02X%c", COL_RED, i, COL_WHITE);
         }
 
-        sprintf(&vidmem[0x50 * linenr+1], "(T1) Bank: %i / %i", i+1, validbanks);
+        if((i+1) == 8) {
+            terminal_printtermbuffer();
+        }
     }
+    terminal_printtermbuffer();
 
-    linenr++;
-
-    // test preservation in second loop
-    bankschecked = 0;
-    for(uint8_t i=0; i<validbanks; i++) {
-        set_bank(i);
-        uint8_t testflag_bank = read_memory(BANKMEM_START, BANKMEM_STOP, 0x80 | i, 0x50 * linenr + 25);
-        
-        if(testflag_bank == 0) {
-            bankschecked++;
-        }
-
-        if(bankschecked == (i+1)) {
-            vidmem[0x50 * linenr] = COL_GREEN;
-        } else {
-            vidmem[0x50 * linenr] = COL_RED;
-        }
-
-        sprintf(&vidmem[0x50 * linenr+1], "(T2) Bank: %i / %i", i+1, validbanks);
-    }
-
-    /*
-     * Done testing
-     * ============
-     */
-
-    linenr++;
-    vidmem[0x50 * linenr] = COL_GREEN;
-    sprintf(&vidmem[0x50 * linenr+1], "TESTS COMPLETED");
-
-    return 0;
+    // put in infinite loop
+    for(;;){}
 }
 
 /**
@@ -386,95 +272,19 @@ void write_stack_pointer(void) {
 }
 
 /**
- * @brief Writes byte to memory and check that it can be read back
- * 
- * @param start start position in memory
- * @param stop stop position in memory
- * @param testbyte byte to be written
- * @param progressbyte position in video memory to write progress to
- * @return uint8_t whether testbyte is correctly written to memory locations
- */
-uint8_t test_memory(const uint16_t start, const uint16_t stop, 
-                    const uint8_t testbyte, const uint16_t progressbyte) {
-    
-    // update stack pointer
-    write_stack_pointer();
-
-    // write a byte to the memory and read it back
-    write_memory(start, stop, testbyte, progressbyte);
-    return read_memory(start, stop, testbyte, progressbyte);
-}
-
-/**
- * @brief Write a byte to memory locations and output progress
- * 
- * @param start start position in memory
- * @param stop stop position in memory
- * @param testbyte byte to be written
- * @param progressbyte position in video memory to write progress to
- */
-void write_memory(const uint16_t start, const uint16_t stop, 
-                  const uint8_t testbyte, const uint16_t progressbyte) {
-
-    // update stack pointer
-    write_stack_pointer();
-
-    // write value to memory
-    for(uint16_t i=start; i<stop; i+=0x100) {
-        memset(&memory[i], testbyte, 0x100);
-        vidmem[progressbyte] = COL_WHITE;
-        sprintf(&vidmem[progressbyte+1], "(W:%02Xxx:%02X)", (i >> 8 & 0xFF), testbyte);
-
-        // overflow guard
-        if(i >= 0xFF00) {
-            break;
-        }
-    }
-}
-
-/**
- * @brief Test that a byte has been successfully written to memory locations
- * 
- * @param start start position in memory
- * @param stop stop position in memory
- * @param testbyte byte to be written
- * @param progressbyte position in video memory to write progress to
- * @return uint8_t whether testbyte is correctly written to memory locations
- */
-uint8_t read_memory(const uint16_t start, const uint16_t stop, 
-                  const uint8_t testbyte, const uint16_t progressbyte) {
-
-    // update stack pointer
-    write_stack_pointer();
-
-    // flag that all bytes are written and read back correctly
-    uint8_t flag_ok = 0;    
-
-    // read value back
-    for(uint16_t i=start; i<stop; i+=0x100) {
-        for(uint16_t j=0; j<0x100; j++) {
-            if(memory[i+j] != testbyte) {
-                flag_ok = 1;
-                sprintf(&vidmem[0x50*21], "ERROR: 0x%04X: %02X != %02X", i+j, memory[i+j], testbyte);
-            }
-        }
-        vidmem[progressbyte] = COL_WHITE;
-        sprintf(&vidmem[progressbyte+1], "(R:%02Xxx:%02X)", (i >> 8 & 0xFF), testbyte);
-
-        // overflow guard
-        if(i >= 0xFF00) {
-            break;
-        }
-    }
-
-    return flag_ok;
-}
-
-/**
  * @brief Initialize the environment
  */
 void init(void) {
-    clearline(0);
+    clear_screen();
+    terminal_init(3, 20);
+    vidmem[0x50] = TEXT_DOUBLE;
+    vidmem[0x50+1] = COL_CYAN;
+    sprintf(&vidmem[0x50+2], "RAM TESTER");
+
+    // insert cursor
+    sprintf(termbuffer, "%c>%c", COL_CYAN, COL_WHITE);
+    terminal_redoline();
+    
     set_bank(0);    // always set bank 0 upon initialization
     sprintf(&vidmem[0x50*22], "Version: %s", __VERSION__);
     sprintf(&vidmem[0x50*23], "Compiled at: %s / %s", __DATE__, __TIME__);
