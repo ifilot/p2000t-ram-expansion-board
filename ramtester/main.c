@@ -202,7 +202,7 @@ int main(void) {
      */
     print_info("Test 5: Bank switching memory", 0);
 
-    for(uint8_t i=0; i<6; i++) {
+    for(uint8_t i=0; i<validbanks; i++) {
         set_bank(i);
         memset(&memory[BANKMEM_START], 0x55 + i, BANKMEM_STOP - BANKMEM_START + 1);
     }
@@ -216,11 +216,15 @@ int main(void) {
             sprintf(&termbuffer[(i % 8) * 4], "%c%02X%c", COL_RED, i, COL_WHITE);
         }
 
-        if((i+1) == 8) {
+        if((i+1) % 8 == 0) {
             terminal_printtermbuffer();
         }
     }
-    terminal_printtermbuffer();
+
+    // also print result when total is not divisable by 8
+    if(validbanks % 8 != 0) {
+        terminal_printtermbuffer();
+    }
 
     // put in infinite loop
     for(;;){}
