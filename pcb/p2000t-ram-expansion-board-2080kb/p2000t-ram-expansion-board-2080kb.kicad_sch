@@ -4844,31 +4844,6 @@
     )
   )
 
-  (symbol (lib_id "power:GND") (at 291.465 60.96 180) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 03bd8a65-8509-459e-ba96-eaf9de16e45d)
-    (property "Reference" "#PWR066" (at 291.465 54.61 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (at 291.465 55.88 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "" (at 291.465 60.96 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 291.465 60.96 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 94bd2475-f3f7-4358-87e8-3f3e77429669))
-    (instances
-      (project "p2000t-ram-expansion-board-2080kb"
-        (path "/aa790391-403a-4556-8f28-ee78862c61e8"
-          (reference "#PWR066") (unit 1)
-        )
-      )
-    )
-  )
-
   (symbol (lib_id "power:+5V") (at 214.63 125.095 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 06976c96-799e-4451-bab2-3d92e3531805)
@@ -5370,31 +5345,6 @@
       (project "p2000t-ram-expansion-board-2080kb"
         (path "/aa790391-403a-4556-8f28-ee78862c61e8"
           (reference "#PWR02") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "power:GND") (at 290.83 30.48 180) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 2655fc2d-0798-4dea-b931-e165f58de4cd)
-    (property "Reference" "#PWR064" (at 290.83 24.13 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (at 290.83 25.4 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "" (at 290.83 30.48 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 290.83 30.48 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 8e4ba780-6261-4a77-9d02-8d5568796479))
-    (instances
-      (project "p2000t-ram-expansion-board-2080kb"
-        (path "/aa790391-403a-4556-8f28-ee78862c61e8"
-          (reference "#PWR064") (unit 1)
         )
       )
     )
@@ -6772,6 +6722,31 @@
     )
   )
 
+  (symbol (lib_id "power:+5V") (at 291.465 60.96 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 850c1d7e-0c5c-4d87-9052-ae969fffa212)
+    (property "Reference" "#PWR065" (at 291.465 64.77 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+5V" (at 291.465 57.3842 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 291.465 60.96 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 291.465 60.96 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 5ff02f48-f046-4b20-9048-e2b8e0e09734))
+    (instances
+      (project "p2000t-ram-expansion-board-2080kb"
+        (path "/aa790391-403a-4556-8f28-ee78862c61e8"
+          (reference "#PWR065") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "74xx:74HC74") (at 290.83 38.1 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 857b303b-afa7-42b0-8fd8-b8633a661796)
@@ -7574,6 +7549,31 @@
       (project "p2000t-ram-expansion-board-2080kb"
         (path "/aa790391-403a-4556-8f28-ee78862c61e8"
           (reference "U3") (unit 5)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "power:+5V") (at 290.83 30.48 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid b2c03d93-f097-4fc5-b8e0-d106b181273a)
+    (property "Reference" "#PWR064" (at 290.83 34.29 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+5V" (at 290.83 26.9042 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 290.83 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 290.83 30.48 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid c2dc91be-a873-41fc-9cb3-40088ee06527))
+    (instances
+      (project "p2000t-ram-expansion-board-2080kb"
+        (path "/aa790391-403a-4556-8f28-ee78862c61e8"
+          (reference "#PWR064") (unit 1)
         )
       )
     )
