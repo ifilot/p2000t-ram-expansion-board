@@ -63,3 +63,8 @@ void print_info(char* str, uint8_t backup_line) {
         terminal_backup_line();
     }
 }
+
+void print_inline_color(char* str, uint8_t color) {
+    sprintf(termbuffer, "  %c%s", color, str);
+    terminal_printtermbuffer();
+}
