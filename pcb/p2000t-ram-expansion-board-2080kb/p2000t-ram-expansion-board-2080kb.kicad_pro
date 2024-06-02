@@ -101,7 +101,7 @@
         "silk_overlap": "warning",
         "skew_out_of_range": "error",
         "solder_mask_bridge": "error",
-        "starved_thermal": "error",
+        "starved_thermal": "ignore",
         "text_height": "warning",
         "text_thickness": "warning",
         "through_hole_pad_without_hole": "error",
@@ -455,7 +455,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "p2000t-ram-expansion-board-1056kb.kicad_pro",
+    "filename": "p2000t-ram-expansion-board-2080kb.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -492,7 +492,7 @@
       "netlist": "C:/Program Files/KiCad/7.0/",
       "plot": "GERBERS/",
       "pos_files": "",
-      "specctra_dsn": "p2000t-ram-expansion-board-1056kb.dsn",
+      "specctra_dsn": "p2000t-ram-expansion-board-2080kb.dsn",
       "step": "",
       "svg": "",
       "vrml": ""
