@@ -41,7 +41,7 @@ jobs:
         cd ramtester
         sed -e 's/node[0-9]\+/node2000000/g' Makefile
         make
-        ls -alh
+        mv -v RAMTEST.bin RAMTEST.BIN
         truncate -s 16K RAMTEST.BIN
     - name: Upload ramtester binary
       uses: actions/upload-artifact@v3
