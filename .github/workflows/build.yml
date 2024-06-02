@@ -39,7 +39,7 @@ jobs:
     - name: Build ramtester application
       run: |
         cd ramtester
-        sed -i 's/node[0-9]+/node2000000/' Makefile
+        sed -e 's/node[0-9]\+/node2000000/g' Makefile
         make
         truncate -s 16K RAMTEST.BIN
     - name: Upload ramtester binary
