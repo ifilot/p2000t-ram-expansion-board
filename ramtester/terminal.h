@@ -27,5 +27,6 @@ void terminal_backup_line(void);
 
 void print_error(char* str);
 void print_info(char* str, uint8_t backup_line);
+void print_inline_color(char* str, uint8_t color);
 
 #endif // _TERMINAL_H
