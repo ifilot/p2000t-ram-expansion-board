@@ -21,7 +21,7 @@
 #ifndef _MEMORY_H
 #define _MEMORY_H
 
-#define LOWMEM          0x6200 // starting point of lower memory
+#define LOWMEM          0x7000 // starting point of lower memory
 #define HIGHMEM_START   0xA000 // start address of upper memory
 #define HIGHMEM_STOP    0xDFFF // end address of upper memory
 #define BANKMEM_START   0xE000 // starting point of bankable memory

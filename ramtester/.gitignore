@@ -2,3 +2,4 @@
 *.rom
 *.bin
 disassembly.txt
+*.lis
