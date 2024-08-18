@@ -42,12 +42,13 @@
 #include "ramtest.h"
 #include "terminal.h"
 
-#define MEMEXPNONE  0
-#define MEMEXP16    1
-#define MEMEXP24    2
-#define MEMEXP64    3
-#define MEMEXP1056  4
-#define MEMEXP2080  5
+#define MEMEXPNONE  0       // no expansion
+#define MEMEXP16    1       // A000-DFFF, no banking
+#define MEMEXP24    2       // A000-FFFF, no banking
+#define MEMEXP64    3       // A000-FFFF, 6 banks
+#define MEMEXP128   4       // A000-FFFF, 14 banks
+#define MEMEXP1056  5
+#define MEMEXP2080  6
 
 // forward declarations
 void init(void);
@@ -178,15 +179,15 @@ void ram_test_02(void) {
         print_info("  Banks 0 - 5 verified", 0);
     }
 
-    // check whether this assessment can be continued to 128 banks
-    for(uint8_t i=6; i<128; i++) {
+    // check whether this assessment can be continued to 14 banks
+    for(uint8_t i=6; i<14; i++) {
         set_bank(i);
         memory[0xE000] = i;
         memory[0xF000] = i | 0x80;
     }
 
     // read back and test
-    for(uint8_t i=6; i<128; i++) {
+    for(uint8_t i=6; i<14; i++) {
         set_bank(i);
         if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
             uppermembanks++;
@@ -199,8 +200,33 @@ void ram_test_02(void) {
         expansion_type = MEMEXP64;
         print_inline_color("64 kb expansion card detected", COL_GREEN);
         return;
+    } else if(uppermembanks == 14) {
+        print_info("  Banks 6 - 13 verified", 0);
+    }
+
+    // check whether this assessment can be continued to 128 banks
+    for(uint8_t i=14; i<128; i++) {
+        set_bank(i);
+        memory[0xE000] = i;
+        memory[0xF000] = i | 0x80;
+    }
+
+    // read back and test
+    for(uint8_t i=14; i<128; i++) {
+        set_bank(i);
+        if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
+            uppermembanks++;
+        } else { // early exit when not possible to avoid generating false positives
+            break;
+        }
+    }
+
+    if(uppermembanks == 14) {
+        expansion_type = MEMEXP128;
+        print_inline_color("128 kb expansion card detected", COL_GREEN);
+        return;
     } else if(uppermembanks == 128) {
-        print_info("  Banks 6 - 127 verified", 0);
+        print_info("  Banks 14 - 127 verified", 0);
     }
 
     // there might be bank switching on for upper memory via the MSB on the
