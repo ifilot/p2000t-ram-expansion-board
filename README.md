@@ -187,10 +187,22 @@ chip. The lower 16 KiB of this chip can be accessed at `0xA000-0xDFFF`. The
 remaining 112 KiB are available as 14 banks of 8 KiB each at `0xE000-0xFFFF`.
 Similar to the other memory expansion boards, bank switching proceeds by writing
 a value to I/O port `0x94`. One can also read back the current bank from this
-register.
+port.
 
 The source files for this board can be found
 [here](pcb/p2000t-ram-expansion-board-128kb-smd/).
+
+**Unpopulated PCB**
+
+![Unpopulated RAM board](img/ram_expansion_board_128_01.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_128_02.jpg)
+
+**Installed PCB**
+
+![Installed 1056 KiB RAM board](img/ram_expansion_board_128_03.jpg)
 
 ## Large memory expansion cards
 
