@@ -5,6 +5,22 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![License: CC-BY-NC-SA-4.0](https://img.shields.io/badge/license-CC--BY--NC--SA--4.0-lightgrey)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)
 
+## Table of contents
+
+* [Purpose](#purpose)
+* [Memory lay-out](#memory-lay-out)
+* [Installation](#installation)
+* [Testing the expansion board](#testing-the-expansion-board)
+* [Schematic](#schematic)
+* [Bill of materials](#bill-of-materials)
+* [Testing bank switching in BASIC](#testing-bank-switching-in-basic)
+* [Files](#files)
+* [128 KiB expansion](#128-kib-expansion)
+* [Large memory expansion cards](#large-memory-expansion-cards)
+  * [1056 KiB expansion](#1056-kib-expansion)
+  * [2080 KiB expansion](#2080-kib-expansion)
+* [License](#license)
+
 ## Purpose
 
 Expand the memory of your P2000T by an additional 64 KiB, giving in total 80 KiB
@@ -13,9 +29,12 @@ of memory. This board uses modern components which are all still in production.
 ![ram expansion board](img/ram_expansion_placement_02.jpg)
 
 > [!TIP]
-> There are also two high-capacity RAM expansion board available in this
-> repository corresponding to a [1056 KiB](#1056-KiB-expansion) and a 
-> [2080 KiB](#2080-KiB-expansion) expansion.
+> * Besides a DIP ram-expansion, there is also a [128 KiB](#128-KiB-expansion)
+>   memory expansion using SMD chips, which are a bit cheaper compared to DIP
+>   chips.
+> * There are also two high-capacity RAM expansion board available in this
+>   repository corresponding to a [1056 KiB](#1056-KiB-expansion) and a 
+>   [2080 KiB](#2080-KiB-expansion) expansion.
 
 ## Memory lay-out
 
@@ -78,9 +97,9 @@ any errors it encounters.
 
 ## Schematic
 
-The schematic for the RAM expansion board is shown below. The ram expansion board
-essentially hosts two 32 KiB RAM chips and a bank register. Using a small set of
-additional logic chips, the line decoding and bank switching is handled.
+The schematic for the RAM expansion board is shown below. The ram expansion
+board essentially hosts two 32 KiB RAM chips and a bank register. Using a small
+set of additional logic chips, the line decoding and bank switching is handled.
 
 ![voltages on the power PCB](pcb/p2000t-ram-expansion-board/p2000t-ram-expansion-board.svg)
 
@@ -119,14 +138,14 @@ First, we need to set the top of BASIC to `0x9000`.
 CLEAR 50,&H9000
 ```
 
-The reason we do this is to ensure that the stack is not residing at the
-top 8 KiB because those bytes will become inaccessible after bank switching. Next,
-we will first write a value to memory address `0xE000`, check that this value
-is properly written, change to another bank and read from the same memory address.
+The reason we do this is to ensure that the stack is not residing at the top 8
+KiB because those bytes will become inaccessible after bank switching. Next, we
+will first write a value to memory address `0xE000`, check that this value is
+properly written, change to another bank and read from the same memory address.
 A different value should be returned (typically 0). Next, we write a different
-value to the `0xE000` and change bank to the initial bank. The original value should 
-now be correctly retrieved. The procedure is performed using the following (very small)
-snippet of BASIC code.
+value to the `0xE000` and change bank to the initial bank. The original value
+should now be correctly retrieved. The procedure is performed using the
+following (very small) snippet of BASIC code.
 
 ```
 10 POKE &HE000,42
@@ -137,10 +156,10 @@ snippet of BASIC code.
 60 OUT &H94,0
 70 PRINT(PEEK(&HE000))
 ```
-After entering in these instructions, type `RUN`. The output of this code should be
-something similar to the code as shown below. The second value might be potentially
-different, depending on earlier memory operations, though is expected to be a zero
-on a fresh boot of the machine.
+After entering in these instructions, type `RUN`. The output of this code should
+be something similar to the code as shown below. The second value might be
+potentially different, depending on earlier memory operations, though is
+expected to be a zero on a fresh boot of the machine.
 
 ```
 42
@@ -153,10 +172,43 @@ on a fresh boot of the machine.
 * [KiCad schematics](pcb/p2000t-ram-expansion-board)
 * [RAM tester utility](ramtester)
 
+## 128 KiB expansion
+
+Next to the 64 KiB memory expansion using
+[DIP](https://en.wikipedia.org/wiki/Dual_in-line_package) chips, there is also a
+128 KiB memory expansion using
+[SMD](https://en.wikipedia.org/wiki/Surface-mount_technology) chips. Because of
+the typical lower price of this last category of chips, this memory expansion is
+a bit cheaper to produce. It does require you to be proficient in soldering on
+SMD components.
+
+The 128 KiB memory expansion uses a single `CY62128ELL-45SX` 128 KiB memory
+chip. The lower 16 KiB of this chip can be accessed at `0xA000-0xDFFF`. The
+remaining 112 KiB are available as 14 banks of 8 KiB each at `0xE000-0xFFFF`.
+Similar to the other memory expansion boards, bank switching proceeds by writing
+a value to I/O port `0x94`. One can also read back the current bank from this
+port.
+
+The source files for this board can be found
+[here](pcb/p2000t-ram-expansion-board-128kb-smd/).
+
+**Unpopulated PCB**
+
+![Unpopulated RAM board](img/ram_expansion_board_128_01.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_128_02.jpg)
+
+**Installed PCB**
+
+![Installed 1056 KiB RAM board](img/ram_expansion_board_128_03.jpg)
+
 ## Large memory expansion cards
 
-Besides the 64 KiB expansion, this repository also contains two specialty versions
-of the RAM expansion card providing 1056 KiB or 2080 KiB of additional memory.
+Besides the 64 KiB expansion, this repository also contains two specialty
+versions of the RAM expansion card providing 1056 KiB or 2080 KiB of additional
+memory.
 
 ### 1056 KiB expansion
 
@@ -166,7 +218,8 @@ This board uses a single 32 KiB static RAM chip to provide 2x16 KiB on
 board. The highest bit in the bank register toggle the 16 KiB banking while the
 lower 7 bits provide the banking for the 8 KiB of memory.
 
-The source files for this board can be found [here](pcb/p2000t-ram-expansion-board-1056kb/).
+The source files for this board can be found
+[here](pcb/p2000t-ram-expansion-board-1056kb/).
 
 **Unpopulated PCB**
 
@@ -185,10 +238,11 @@ The source files for this board can be found [here](pcb/p2000t-ram-expansion-boa
 This board uses a single 32 KiB static RAM chip to provide 2x16 KiB on
 `0xA000-0xDFFF` and four 512 KiB static RAM chips to provide another 256x8 KiB
 on `0xE000-0xFFFF`. This board requires two bank registers, one 8-bit bank
-register exposed on I/O port `0x94` and another two-bit bank register on
-I/O port `0x95` (only one bit of the two-bit bank register is used).
+register exposed on I/O port `0x94` and another two-bit bank register on I/O
+port `0x95` (only one bit of the two-bit bank register is used).
 
-The source files for this board can be found [here](pcb/p2000t-ram-expansion-board-2080kb/).
+The source files for this board can be found
+[here](pcb/p2000t-ram-expansion-board-2080kb/).
 
 **Populated PCB**
 
