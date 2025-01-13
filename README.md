@@ -4,6 +4,7 @@
 [![Build](https://github.com/ifilot/p2000t-ram-expansion-board/actions/workflows/build.yml/badge.svg)](https://github.com/ifilot/p2000t-ram-expansion-board/actions/workflows/build.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![License: CC-BY-NC-SA-4.0](https://img.shields.io/badge/license-CC--BY--NC--SA--4.0-lightgrey)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)
+[![discord](https://img.shields.io/discord/1167925678868541451?logo=discord&logoColor=white)](https://discord.gg/YtzJTWYAxy)
 
 ## Table of contents
 
@@ -20,6 +21,11 @@
   * [1056 KiB expansion](#1056-kib-expansion)
   * [2080 KiB expansion](#2080-kib-expansion)
 * [License](#license)
+
+> [!TIP] 
+> Have questions or comments about the **P2000T RAM expansion**? Join
+> the conversation and chat with the developers on our [Discord
+> server](https://discord.gg/YtzJTWYAxy).
 
 ## Purpose
 
