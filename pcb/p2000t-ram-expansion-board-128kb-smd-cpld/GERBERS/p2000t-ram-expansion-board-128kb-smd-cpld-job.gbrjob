@@ -3,18 +3,18 @@
     "GenerationSoftware": {
       "Vendor": "KiCad",
       "Application": "Pcbnew",
-      "Version": "8.0.2"
+      "Version": "9.0.0"
     },
-    "CreationDate": "2024-08-18T09:09:39+02:00"
+    "CreationDate": "2025-03-29T21:15:17+01:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
-      "Name": "p2000t-ram-expansion-board-128kb-smd",
+      "Name": "p2000t-ram-expansion-board-128kb-smd-cpld",
       "GUID": "70323030-3074-42d7-9261-6d2d65787061",
       "Revision": "4"
     },
     "Size": {
-      "X": 110.082,
+      "X": 75.4716,
       "Y": 45.6168
     },
     "LayerNumber": 2,
@@ -34,47 +34,47 @@
   ],
   "FilesAttributes": [
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-F_Cu.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-F_Cu.gbr",
       "FileFunction": "Copper,L1,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-B_Cu.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-B_Cu.gbr",
       "FileFunction": "Copper,L2,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-F_Paste.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-F_Paste.gbr",
       "FileFunction": "SolderPaste,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-B_Paste.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-B_Paste.gbr",
       "FileFunction": "SolderPaste,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-F_Silkscreen.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-F_Silkscreen.gbr",
       "FileFunction": "Legend,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-B_Silkscreen.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-B_Silkscreen.gbr",
       "FileFunction": "Legend,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-F_Mask.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-F_Mask.gbr",
       "FileFunction": "SolderMask,Top",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-B_Mask.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-B_Mask.gbr",
       "FileFunction": "SolderMask,Bot",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "p2000t-ram-expansion-board-128kb-smd-Edge_Cuts.gbr",
+      "Path": "p2000t-ram-expansion-board-128kb-smd-cpld-Edge_Cuts.gbr",
       "FileFunction": "Profile",
       "FilePolarity": "Positive"
     }
