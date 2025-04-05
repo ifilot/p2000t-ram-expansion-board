@@ -12,6 +12,15 @@ PROPERTY ATMEL {POWER_RESET = OFF};
 PROPERTY ATMEL {PIN_KEEP = ON};
 PROPERTY ATMEL {PREASSIGN = KEEP};
 
+/** ------------------------------------------------------------------------**/
+/** IMPORTANT NOTES WHEN FLASHING                                           **/
+/** - When ATMISP is crashing when opening a .JED file, ensure it is        **/
+/**   located in a short and simple file path without any spaces present.   **/
+/**   in ATMISP.                                                            **/
+/** - When changes have been made to the .JED file, always reload the file  **/
+/**   in ATMISP.                                                            **/
+/** ------------------------------------------------------------------------**/
+
 PIN  2 = A0;
 PIN  3 = A1;
 PIN  6 = A2;
@@ -31,8 +40,8 @@ PIN 23 = D0;
 PIN 25 = D1;
 PIN 27 = D2;
 PIN 28 = D3;
-PIN 30 = R4;
-PIN 31 = R5;
+PIN 30 = D4;
+PIN 31 = D5;
 PIN 33 = D6;
 PIN 34 = D7;
 PIN 35 = R0;
@@ -45,29 +54,30 @@ PIN 44 = R3;
 /** Buried states **/
 Pinnode = ADDRSEL;
 Pinnode = [S3..0];
-Pinnode = BANKCP;
+Pinnode = BANKWR;
 Pinnode = BANKRD;
 Pinnode = EO;
 
 /** ------------------------------------------------------------------------**/
 /** activate ROM chip on /MRQ and RAMS2                                     **/
 /** ------------------------------------------------------------------------**/
-CS1 = !(!MRQ_N & RAMS2);
+CS1_N = !(!MRQ_N & RAMS2);
 
 /** ------------------------------------------------------------------------**/
 /** Capture memory address 0x94 = 1001 0010                                 **/
 /** ------------------------------------------------------------------------**/
 ADDRSEL = (A7 & !A6 & !A5 & A4 & !A3 & A2 & !A1 & !A0);
+/**         1     0     0    1     0    1     0     0                       **/
 
 /** ------------------------------------------------------------------------**/
 /** Write BANK address to BANK register                                     **/
 /** ------------------------------------------------------------------------**/
-BANKCP = (!IORQ_N & !WR_N & ADDRSEL);
+BANKWR = (!IORQ_N & !WR_N & ADDRSEL);
 S0.d = D0;
 S1.d = D1;
 S2.d = D2;
 S3.d = D3;
-[S3..0].ck = BANKCP;
+[S3..0].ck = BANKWR;
 [S3..0].ar = !RES_N;
 
 /** ------------------------------------------------------------------------**/
@@ -78,18 +88,11 @@ D0 = BANKRD & S0;
 D1 = BANKRD & S1;
 D2 = BANKRD & S2;
 D3 = BANKRD & S3;
-D4 = !BANKRD;
-D5 = !BANKRD;
-D6 = !BANKRD;
-D7 = !BANKRD;
-D0.oe = BANKRD;
-D1.oe = BANKRD;
-D2.oe = BANKRD;
-D3.oe = BANKRD;
-D4.oe = BANKRD;
-D5.oe = BANKRD;
-D6.oe = BANKRD;
-D7.oe = BANKRD;
+D4 = 'b'0;
+D5 = 'b'0;
+D6 = 'b'0;
+D7 = 'b'0;
+[D7..0].oe = BANKRD;
 
 /** ------------------------------------------------------------------------**/
 /** Construct BANK address based on A13 and A14                             **/
