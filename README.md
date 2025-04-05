@@ -17,6 +17,8 @@
 * [Testing bank switching in BASIC](#testing-bank-switching-in-basic)
 * [Files](#files)
 * [128 KiB expansion](#128-kib-expansion)
+  * [SMD version](#smd-version)
+  * [CPLD version](#cpld-version)
 * [Large memory expansion cards](#large-memory-expansion-cards)
   * [1056 KiB expansion](#1056-kib-expansion)
   * [2080 KiB expansion](#2080-kib-expansion)
@@ -180,6 +182,8 @@ expected to be a zero on a fresh boot of the machine.
 
 ## 128 KiB expansion
 
+### SMD version
+
 Next to the 64 KiB memory expansion using
 [DIP](https://en.wikipedia.org/wiki/Dual_in-line_package) chips, there is also a
 128 KiB memory expansion using
@@ -209,6 +213,23 @@ The source files for this board can be found
 **Installed PCB**
 
 ![Installed 1056 KiB RAM board](img/ram_expansion_board_128_03.jpg)
+
+### CPLD version
+
+To cut down costs even further, there is also a CUPL version. Besides the
+`CY62128ELL-45SX`, the PCB only hosts one other chip: a `ATF1502`. All glue
+logic required for the RAM expansion board is basically programmed on this chip.
+
+The source files for this board can be found
+[here](pcb/p2000t-ram-expansion-board-128kb-smd-cpld/).
+
+**Unpopulated PCB**
+
+![Unpopulated RAM board](img/ram_expansion_board_128_cpld-01.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_128_cpld-02.jpg)
 
 ## Large memory expansion cards
 
