@@ -43,6 +43,8 @@ assembly.
 > tools (e.g. CPLD programmer). Review this README to find a board that
 > matches your comfort level before starting a build. 
 
+![ram expansion board](img/ram_expansion_placement_02.jpg)
+
 ## Memory lay-out
 
 The memory lay-out of the P2000T is organized as shown in the table below
