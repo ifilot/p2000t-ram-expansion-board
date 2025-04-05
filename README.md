@@ -31,29 +31,28 @@
 
 ## Purpose
 
-Expand the memory of your P2000T by an additional 64 KiB, giving in total 80 KiB
-of memory. This board uses modern components which are all still in production.
+This repository provides several RAM expansion boards for the Philips P2000T,
+ranging from 64 KiB to over 2 MiB. Options vary in complexity (THT, SMD, CPLD),
+so choose a board that fits your soldering skills and tools. A RAM tester
+utility is included to verify proper installation and functionality after
+assembly.
 
-![ram expansion board](img/ram_expansion_placement_02.jpg)
-
-> [!TIP]
-> * Besides a DIP ram-expansion, there is also a [128 KiB](#128-KiB-expansion)
->   memory expansion using SMD chips, which are a bit cheaper compared to DIP
->   chips.
-> * There are also two high-capacity RAM expansion board available in this
->   repository corresponding to a [1056 KiB](#1056-KiB-expansion) and a 
->   [2080 KiB](#2080-KiB-expansion) expansion.
+> [!IMPORTANT]
+> This repository includes various RAM expansion PCBs for the P2000T. Your
+> choice should depend on your soldering skills (THT or SMD) and available
+> tools (e.g. CPLD programmer). Review this README to find a board that
+> matches your comfort level before starting a build. 
 
 ## Memory lay-out
 
 The memory lay-out of the P2000T is organized as shown in the table below
 
-| Address       | Description    |
-| ------------- | -------------- |
-| 0x0000-0x1000 | Monitor rom    |
-| 0x1000-0x4FFF | Cartridge      |
-| 0x5000-0x5FFF | Video memory   |
-| 0x6000-0x9FFF | RAM memory     |
+| Address       | Description      |
+| ------------- | ---------------- |
+| 0x0000-0x1000 | Monitor rom      |
+| 0x1000-0x4FFF | Cartridge        |
+| 0x5000-0x5FFF | Video memory     |
+| 0x6000-0x9FFF | RAM memory       |
 | 0xA000-0xDFFF | 16 KiB expansion |
 | 0xE000-0xFFFF | 8 KiB banks      |
 
@@ -73,7 +72,7 @@ is found directly behind the cartridge slots. Furthermore, you need to solder
 a GND and a 5V line onto the power PCB (see image below) and insert that in the
 screw terminal of the expansion board.
 
-> [!NOTE]  
+> [!WARNING]  
 > Please check carefully that the polarity is correct. Although the board comes
 > with reverse polarity protection in the form of a diode, it is always better
 > to check twice before turning on the power.
