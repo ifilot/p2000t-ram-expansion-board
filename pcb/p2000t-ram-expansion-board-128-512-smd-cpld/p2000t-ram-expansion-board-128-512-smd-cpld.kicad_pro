@@ -479,7 +479,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "p2000t-ram-expansion-board-256kb-smd-cpld.kicad_pro",
+    "filename": "p2000t-ram-expansion-board-128-512-smd-cpld.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -517,7 +517,7 @@
       "netlist": "",
       "plot": "GERBERS/",
       "pos_files": "./",
-      "specctra_dsn": "p2000t-ram-expansion-board-256kb-smd-cpld.dsn",
+      "specctra_dsn": "p2000t-ram-expansion-board-128-512-smd-cpld.dsn",
       "step": "",
       "svg": "",
       "vrml": ""
