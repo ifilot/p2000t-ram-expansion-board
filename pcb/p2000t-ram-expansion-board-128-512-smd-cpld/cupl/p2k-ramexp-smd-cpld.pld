@@ -23,19 +23,20 @@ PROPERTY ATMEL {PREASSIGN = KEEP};
 
 PIN  2 = A0;
 PIN  3 = A1;
+PIN  5 = CS3_N;
 PIN  6 = A2;
 PIN  8 = A3;
 PIN 10 = A4;
 PIN 11 = A5;
 PIN 12 = A6;
 PIN 13 = A7;
-PIN 14 = MRQ_N;
+PIN 14 = CS4_N;
 PIN 15 = IORQ_N;
 PIN 18 = RD_N;
 PIN 19 = CS1_N;
 PIN 20 = WR_N;
 PIN 21 = RAMS2;
-PIN 22 = RES_N;
+PIN 22 = CS2_N;
 PIN 23 = D0;
 PIN 25 = D1;
 PIN 27 = D2;
@@ -47,21 +48,18 @@ PIN 34 = D7;
 PIN 35 = R0;
 PIN 37 = A13;
 PIN 38 = A14;
+PIN 39 = RES_N;
+PIN 40 = MRQ_N;
 PIN 42 = R1;
 PIN 43 = R2;
 PIN 44 = R3;
 
 /** Buried states **/
 Pinnode = ADDRSEL;
-Pinnode = [S3..0];
+Pinnode = [S5..0];
 Pinnode = BANKWR;
 Pinnode = BANKRD;
 Pinnode = EO;
-
-/** ------------------------------------------------------------------------**/
-/** activate ROM chip on /MRQ and RAMS2                                     **/
-/** ------------------------------------------------------------------------**/
-CS1_N = !(!MRQ_N & RAMS2);
 
 /** ------------------------------------------------------------------------**/
 /** Capture memory address 0x94 = 1001 0010                                 **/
@@ -77,8 +75,10 @@ S0.d = D0;
 S1.d = D1;
 S2.d = D2;
 S3.d = D3;
-[S3..0].ck = BANKWR;
-[S3..0].ar = !RES_N;
+S4.d = D4;
+S5.d = D5;
+[S5..0].ck = BANKWR;
+[S5..0].ar = !RES_N;
 
 /** ------------------------------------------------------------------------**/
 /** Output current BANK address from BANK register                          **/
@@ -88,8 +88,8 @@ D0 = BANKRD & S0;
 D1 = BANKRD & S1;
 D2 = BANKRD & S2;
 D3 = BANKRD & S3;
-D4 = 'b'0;
-D5 = 'b'0;
+D4 = BANKRD & S4;
+D5 = BANKRD & S5;
 D6 = 'b'0;
 D7 = 'b'0;
 [D7..0].oe = BANKRD;
@@ -100,14 +100,38 @@ D7 = 'b'0;
 /** S0-S3 and output that to R0-R3. If not, just place A13 on R0            **/
 /** The addition of "+2" is accomplished using a (S+2) ADDER                **/
 /** ------------------------------------------------------------------------**/
-EO = A13 & A14;
-SUM0 = S0;                          /** BIT 0 always remains the same **/
-SUM1 = !S1;                         /** BIT 1 always flips upon addition **/
-C2   = S1;                          /** CARRY2 is always equal to BIT1 **/
-SUM2 = (!S2 & C2) # (S2 & !C2);     /** SUM2 = S2 XOR C2 **/
-C3   = S2 & C2;                     /** CARRY3 = S2 AND C2 **/
-SUM3 = (!S3 & C3) # (S3 & !C3);     /** SUM3 = S3 XOR C3 **/
+EO = A14 & A13;                         /** Banked region selector **/
+
+/** Add 2 to S[5:0] using ripple carry logic **/
+SUM0 = S0;                              /** +2: LSB stays same **/
+SUM1 = !S1;                             /** XOR with carry-in from bit 0 **/
+C2   = S1;
+SUM2 = S2 $ C2;                         /** XOR with carry from prev bit **/
+C3   = S2 & C2;
+SUM3 = S3 $ C3;
+C4   = S3 & C3;
+SUM4 = S4 $ C4;
+C5   = S4 & C4;
+SUM5 = S5 $ C5;
 R0 = (EO & SUM0) # (!EO & A13);
-R1 = EO & SUM1;
-R2 = EO & SUM2;
-R3 = EO & SUM3;
+R1 = (EO & SUM1);
+R2 = (EO & SUM2);
+R3 = (EO & SUM3);
+R4 = (EO & SUM4);
+R5 = (EO & SUM5);
+
+/** ------------------------------------------------------------------------**/
+/** activate RAM chip on /MRQ and RAMS2                                     **/
+/** ------------------------------------------------------------------------**/
+FIXED_REGION  = !A14 & A13;             /** A000-DFFF **/
+RAM_ACCESS    = RAMS2 & !MRQ_N;         /** Shared enable condition **/
+
+CHIP0 = !R5 & !R4;
+CHIP1 = !R5 &  R4;
+CHIP2 =  R5 & !R4;
+CHIP3 =  R5 &  R4;
+
+CS1_N = !(RAM_ACCESS & ((CHIP0 & EO) # FIXED_REGION));
+CS2_N = !(RAM_ACCESS & CHIP1 & EO);
+CS3_N = !(RAM_ACCESS & CHIP2 & EO);
+CS4_N = !(RAM_ACCESS & CHIP3 & EO);
