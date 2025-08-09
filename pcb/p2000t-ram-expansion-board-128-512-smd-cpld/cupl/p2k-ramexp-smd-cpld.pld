@@ -19,6 +19,9 @@ PROPERTY ATMEL {PREASSIGN = KEEP};
 /**   in ATMISP.                                                            **/
 /** - When changes have been made to the .JED file, always reload the file  **/
 /**   in ATMISP.                                                            **/
+/** - The ATDH1150USB device has two ports, port 0 should use the WINUSB    **/
+/**   driver while port 1 should use the FTDI BUS driver. This can be       **/
+/**   configured using Zadig.                                               **/
 /** ------------------------------------------------------------------------**/
 
 PIN  2 = A0;
@@ -100,38 +103,40 @@ D7 = 'b'0;
 /** S0-S3 and output that to R0-R3. If not, just place A13 on R0            **/
 /** The addition of "+2" is accomplished using a (S+2) ADDER                **/
 /** ------------------------------------------------------------------------**/
-EO = A14 & A13;                         /** Banked region selector **/
+RAM_ACCESS    = RAMS2 & !MRQ_N;         /** Whether to access extended RAM  **/
+BANKED_REGION = A14 & A13;              /** E000-FFFF: Banked region        **/
 
-/** Add 2 to S[5:0] using ripple carry logic **/
+/** sum bits **/
 SUM0 = S0;                              /** +2: LSB stays same **/
 SUM1 = !S1;                             /** XOR with carry-in from bit 0 **/
-C2   = S1;
-SUM2 = S2 $ C2;                         /** XOR with carry from prev bit **/
-C3   = S2 & C2;
+SUM2 = S2 $ C2;
 SUM3 = S3 $ C3;
-C4   = S3 & C3;
 SUM4 = S4 $ C4;
-C5   = S4 & C4;
 SUM5 = S5 $ C5;
-R0 = (EO & SUM0) # (!EO & A13);
-R1 = (EO & SUM1);
-R2 = (EO & SUM2);
-R3 = (EO & SUM3);
-R4 = (EO & SUM4);
-R5 = (EO & SUM5);
+
+/** carry bits **/
+C2 = S1;
+C3 = S2 & C2;
+C4 = S3 & C3;
+C5 = S4 & C4;
+
+/** effective bank based on sum bits **/
+R0 = (BANKED_REGION & SUM0) # (!BANKED_REGION & A13);
+R1 = (BANKED_REGION & SUM1);
+R2 = (BANKED_REGION & SUM2);
+R3 = (BANKED_REGION & SUM3);
+R4 = (BANKED_REGION & SUM4);
+R5 = (BANKED_REGION & SUM5);
 
 /** ------------------------------------------------------------------------**/
 /** activate RAM chip on /MRQ and RAMS2                                     **/
 /** ------------------------------------------------------------------------**/
-FIXED_REGION  = !A14 & A13;             /** A000-DFFF **/
-RAM_ACCESS    = RAMS2 & !MRQ_N;         /** Shared enable condition **/
-
 CHIP0 = !R5 & !R4;
 CHIP1 = !R5 &  R4;
 CHIP2 =  R5 & !R4;
 CHIP3 =  R5 &  R4;
 
-CS1_N = !(RAM_ACCESS & ((CHIP0 & EO) # FIXED_REGION));
-CS2_N = !(RAM_ACCESS & CHIP1 & EO);
-CS3_N = !(RAM_ACCESS & CHIP2 & EO);
-CS4_N = !(RAM_ACCESS & CHIP3 & EO);
+CS1_N = !RAM_ACCESS # (BANKED_REGION & !CHIP0);
+CS2_N = !(RAM_ACCESS & CHIP1 & BANKED_REGION);
+CS3_N = !(RAM_ACCESS & CHIP2 & BANKED_REGION);
+CS4_N = !(RAM_ACCESS & CHIP3 & BANKED_REGION);

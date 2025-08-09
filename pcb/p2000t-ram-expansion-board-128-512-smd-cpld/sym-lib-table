@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "cy62128-tsop")(type "KiCad")(uri "${KIPRJMOD}/components/cy62128-tsop.kicad_sym")(options "")(descr ""))
+)
