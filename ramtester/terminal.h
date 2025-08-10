@@ -7,6 +7,7 @@
 #include "constants.h"
 
 #define LINELENGTH 40
+#define TERMBUFFER_PADDING 10
 #define BLINK_INTERVAL 500 // ms
 #define TIMER_INTERVAL 20
 
@@ -17,7 +18,7 @@ extern uint8_t _terminal_startline;
 extern uint8_t _terminal_endline;
 extern uint16_t _prevcounter;
 
-extern char termbuffer[LINELENGTH];
+extern char termbuffer[LINELENGTH + TERMBUFFER_PADDING]; // some additional padding for safety
 
 void terminal_init(uint8_t, uint8_t);
 void terminal_printtermbuffer(void);

@@ -53,7 +53,7 @@
 #define MEMEXP1056  8
 #define MEMEXP2080  9
 
-uint8_t test_passed[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t test_passed[5];
 
 // forward declarations
 void init(void);
@@ -76,7 +76,8 @@ void ram_test_07(void);
 
 uint8_t test_bank_helper(uint8_t startbank, uint8_t stopbank, uint8_t *uppermembanks,
                          uint8_t *expansion_type, uint8_t banktypefail, uint16_t szdetect);
-uint8_t test_fixed_pattern(uint8_t pattern);
+void test_fixed_pattern(uint8_t pattern, uint8_t check_id);
+void write_termbuffer_value(uint8_t i, uint8_t color);
 
 // global variables
 uint8_t expansion_type = 0;
@@ -86,6 +87,9 @@ uint16_t uppermembanks = 0;       // number of upper memory banks
 
 int main(void) {
     init();
+
+    // reset passed tests array
+    memset(test_passed, 0x00, 5);
 
     // perform test on high memory
     ram_test_01();
@@ -104,17 +108,20 @@ int main(void) {
     print_inline_color("ALL DONE PERFORMING RAM TESTS", COL_CYAN);
 
     // show summary
+    print_info("",0);   // print empty line
+    print_inline_color(" -= SUMMARY =-", COL_CYAN);
+    char buf[50];
     for(uint8_t i=0; i<5; i++) {
-        char buf[50];
         if(test_passed[i] == 0) {
-            sprintf(buf, "TEST %u %cPASSED%c", i+1, COL_GREEN, COL_WHITE);
+            sprintf(buf, "TEST %u: %cPASSED%c", i+1, COL_GREEN, COL_WHITE);
             print_info(buf, 0);
         } else {
-            sprintf(buf, "TEST %uFAILED%u; %u ERROR ENCOUNTERED", i+1, COL_RED, COL_WHITE, test_passed[i]);
+            sprintf(buf, "TEST %u: %cFAILED%c; %u ERROR(S) ENCOUNTERED", i+1, COL_RED, COL_WHITE, test_passed[i]);
             print_info(buf, 0);
         }
         
     }
+    write_stack_pointer();
 
     // put in infinite loop
     for(;;){}
@@ -210,7 +217,6 @@ void ram_test_02(void) {
     }
 
     // test 64 KiB memory expansion
-    print_info("Calling test bank helper 001", 0);
     if(test_bank_helper((64-16)/8, (64+48)/8, &uppermembanks, &expansion_type, MEMEXP64, 64) == 1) {
         return;
     }
@@ -321,7 +327,7 @@ void ram_test_03(void) {
 */
 void ram_test_04(void) {
     set_bank(0);
-    print_info("Test 3: Lower and higher memory", 0);
+    print_info("Test 4: Lower and higher memory", 0);
     memset(&memory[LOWMEM], 0x55, STACK - LOWMEM);
     uint16_t lowmem_count = count_ram_bytes(&memory[LOWMEM], 0x55, STACK - LOWMEM);
     memset(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
@@ -360,7 +366,7 @@ void ram_test_05(void) {
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
         memset(&memory[BANKMEM_START], 0x55 ^ i, BANKMEM_STOP - BANKMEM_START + 1);
-        sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_CYAN, i, COL_WHITE);
+        write_termbuffer_value((uint8_t)i, COL_CYAN);
 
         if((i+1) % 8 == 0) {
             terminal_printtermbuffer();
@@ -378,9 +384,9 @@ void ram_test_05(void) {
         set_bank(i);
         uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], 0x55 ^ i, BANKMEM_STOP - BANKMEM_START + 1);
         if(miscounts == 0) {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_GREEN, i, COL_WHITE);
+            write_termbuffer_value(i, COL_GREEN);
         } else {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_RED, i, COL_WHITE);
+            write_termbuffer_value((uint8_t)i, COL_RED);
             test_passed[0]++;
         }
 
@@ -403,12 +409,8 @@ void ram_test_05(void) {
  */
 void ram_test_06(void) {   
     print_info("Test 6: Checkerboard test", 0);
-    if(test_fixed_pattern(0x55) != 0) {
-        test_passed[1]++;
-    }
-    if(test_fixed_pattern(0xAA) != 0) {
-        test_passed[2]++;
-    }
+    test_fixed_pattern(0x55, 1);
+    test_fixed_pattern(0xAA, 2);
 }
 
 /*
@@ -419,12 +421,8 @@ void ram_test_06(void) {
  */
 void ram_test_07(void) {   
     print_info("Test 7: Stuck at transition", 0);
-    if(test_fixed_pattern(0x00) != 0) {
-        test_passed[3]++;
-    }
-    if(test_fixed_pattern(0xFF) != 0) {
-        test_passed[4]++;
-    }
+    test_fixed_pattern(0x00, 3);
+    test_fixed_pattern(0xFF, 4);
 }
 
 /**
@@ -450,7 +448,7 @@ void set_bank(uint8_t bank) {
 
     memset(vidmem, 0, 40);
     vidmem[0x00] = COL_MAGENTA;
-    sprintf(&vidmem[1], "Bank register: |%s| (%i)", char_bits, bank);
+    sprintf(&vidmem[1], "Bank register: |%s| (%u)", char_bits, bank);
     write_stack_pointer();
 }
 
@@ -481,7 +479,7 @@ void write_stack_pointer(void) {
  * number of banks.
  */
 uint8_t test_bank_helper(uint8_t startbank, uint8_t stopbank, uint8_t *uppermembanks,
-                      uint8_t *expansion_type, uint8_t banktypefail, uint16_t szdetect) {
+                        uint8_t *expansion_type, uint8_t banktypefail, uint16_t szdetect) {
     
     char buf[50];
 
@@ -509,22 +507,25 @@ uint8_t test_bank_helper(uint8_t startbank, uint8_t stopbank, uint8_t *uppermemb
         print_inline_color(buf, COL_GREEN);
         return 1;
     } else {
-        sprintf(buf, "  Banks %u - %u probed", startbank, stopbank-1);
-        print_info(buf, 0);
+        sprintf(termbuffer, "  Banks %u - %u probed", startbank, stopbank-1);
+        terminal_printtermbuffer();
         return 0;
     }
 }
 
-uint8_t test_fixed_pattern(uint8_t pattern) {
-    char buf[50];
-    sprintf(buf, "  Writing 0x%02X to banks", pattern);
-    print_info(buf, 0);
+/**
+ * Apply a fixed byte pattern to a set of RAM banks and verify whether these can be
+ * read back.
+ */
+void test_fixed_pattern(uint8_t pattern, uint8_t check_id) {
+    sprintf(termbuffer, "  Writing 0x%02X to banks", pattern);
+    terminal_printtermbuffer();
     uint8_t miscounts = 0;
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
         memset(&memory[BANKMEM_START], pattern, BANKMEM_STOP - BANKMEM_START + 1);
-        sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_CYAN, i, COL_WHITE);
+        write_termbuffer_value((uint8_t)i, COL_CYAN);
 
         if((i+1) % 8 == 0) {
             terminal_printtermbuffer();
@@ -536,17 +537,17 @@ uint8_t test_fixed_pattern(uint8_t pattern) {
         terminal_printtermbuffer();
     }
 
-    sprintf(buf, "  Testing 0x%02X to banks", pattern);
-    print_info(buf, 0);
+    sprintf(termbuffer, "  Testing 0x%02X on banks", pattern);
+    terminal_printtermbuffer();
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
         uint16_t miscounts_bank = count_ram_bytes(&memory[BANKMEM_START], pattern, BANKMEM_STOP - BANKMEM_START + 1);
         if(miscounts_bank == 0) {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_GREEN, i, COL_WHITE);
+            write_termbuffer_value((uint8_t)i, COL_GREEN);
         } else {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_RED, i, COL_WHITE);
-            miscounts++;
+            write_termbuffer_value((uint8_t)i, COL_RED);
+            test_passed[check_id]++;
         }
 
         if((i+1) % 8 == 0) {
@@ -558,8 +559,27 @@ uint8_t test_fixed_pattern(uint8_t pattern) {
     if(uppermembanks % 8 != 0) {
         terminal_printtermbuffer();
     }
+}
 
-    return miscounts;
+static inline char hex1(uint8_t v) {
+    static const char hexd[] = "0123456789ABCDEF";  // size = 17 (includes '\0')
+    return hexd[v & 0xF];
+}
+
+/**
+ * Helper function to write 4-byte colored hex value to string buffer;
+ * used to indicate RAM banks.
+ */
+void write_termbuffer_value(uint8_t i, uint8_t color) {
+    // 4 visible chars + NUL; we intentionally copy 5 bytes into a 4-byte slot
+    // so the NUL becomes the first byte of the next cell.
+    char tmp[5];
+    tmp[0] = (char)color;
+    tmp[1] = hex1((uint8_t)(i >> 4));
+    tmp[2] = hex1((uint8_t)i);
+    tmp[3] = (char)COL_WHITE;
+    tmp[4] = '\0';
+    memcpy(&termbuffer[(i % 8) * 4], tmp, 5);
 }
 
 /**
@@ -576,7 +596,7 @@ void init(void) {
     sprintf(termbuffer, "%c>%c", COL_CYAN, COL_WHITE);
     terminal_redoline();
     
-    set_bank(0);    // always set bank 0 upon initialization
+    set_bank(0);    // always set bank 0 upon initializati`on
     sprintf(&vidmem[0x50*22], "Version: %s", __VERSION__);
     sprintf(&vidmem[0x50*23], "Compiled at: %s / %s", __DATE__, __TIME__);
 }

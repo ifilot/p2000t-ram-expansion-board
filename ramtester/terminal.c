@@ -5,7 +5,7 @@ uint8_t _terminal_maxlines = 0;
 uint8_t _terminal_startline = 0;
 uint8_t _terminal_endline = 0;
 uint16_t _prevcounter = 0;
-char termbuffer[LINELENGTH];
+char termbuffer[LINELENGTH + TERMBUFFER_PADDING];
 
 void terminal_init(uint8_t start, uint8_t stop) {
     _terminal_startline = start;
@@ -57,7 +57,7 @@ void print_error(char* str) {
 }
 
 void print_info(char* str, uint8_t backup_line) {
-    sprintf(termbuffer, str);
+    strncpy(termbuffer, str, LINELENGTH);
     terminal_printtermbuffer();
     if(backup_line == 1) {
         terminal_backup_line();
