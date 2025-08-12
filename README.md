@@ -240,6 +240,14 @@ that admits 1-4 `CY62128ELL-45SX` 128 KiB memory chips.
 The source files for this board can be found
 [here](pcb/p2000t-ram-expansion-board-128-512-smd-cpld).
 
+**Installed PCB**
+
+![Installed RAM board](img/ram_expansion_board_512_01.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_512_02.jpg)
+
 ### THT-1056 KiB expansion
 
 This board uses a single 32 KiB static RAM chip to provide 2x16 KiB on
