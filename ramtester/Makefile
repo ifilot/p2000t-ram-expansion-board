@@ -7,6 +7,8 @@ main.bin main.map main.rom: main.c util.c memory.c stack.asm ramtest.asm ramtest
 	stack.asm \
 	ramtest.asm \
 	terminal.c \
+	bankcounting.c \
+	stack.c \
 	-startup=1 \
 	-pragma-define:CRT_ORG_CODE=0x1000 \
 	-pragma-define:CRT_ORG_DATA=0x6100 \

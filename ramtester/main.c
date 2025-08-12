@@ -23,8 +23,8 @@
  * board of a P2000T. Note that this application assumes that the stack starts
  * at location 0x9FFF and grows downwards (i.e. with decreasing memory address).
  *
- * This program works for both the 64kb expansion board as well as the
- * 1056kb expansion board.
+ * This program works for both the 64KiB expansion board as well as the
+ * 1056KiB expansion board.
  */
 
 #include <string.h>
@@ -41,31 +41,41 @@
 #include "z80.h"
 #include "ramtest.h"
 #include "terminal.h"
+#include "bankcounting.h"
 
 #define MEMEXPNONE  0       // no expansion
 #define MEMEXP16    1       // A000-DFFF, no banking
 #define MEMEXP24    2       // A000-FFFF, no banking
 #define MEMEXP64    3       // A000-FFFF, 6 banks
 #define MEMEXP128   4       // A000-FFFF, 14 banks
-#define MEMEXP1056  5
-#define MEMEXP2080  6
+#define MEMEXP256   5       // A000-FFFF, 30 banks
+#define MEMEXP384   6       // A000-FFFF, 46 banks
+#define MEMEXP512   7       // A000-FFFF, 62 banks
+#define MEMEXP1056  8
+#define MEMEXP2080  9
+
+uint8_t test_passed[5];
 
 // forward declarations
 void init(void);
 
-void set_bank(uint8_t bank);
-
 void set_bank_highmem(uint8_t bank);
 
 uint8_t read_bank(void);
-
-void write_stack_pointer(void);
 
 void ram_test_01(void);
 void ram_test_02(void);
 void ram_test_03(void);
 void ram_test_04(void);
 void ram_test_05(void);
+void ram_test_06(void);
+void ram_test_07(void);
+
+uint8_t test_bank_helper(uint8_t startbank, uint8_t stopbank, uint8_t *uppermembanks,
+                         uint8_t *expansion_type, uint8_t banktypefail, uint16_t szdetect);
+void test_fixed_pattern(uint8_t pattern, uint8_t check_id);
+void write_termbuffer_value(uint8_t i, uint8_t color);
+static uint8_t fingerprint(uint8_t i) { return (uint8_t)(0xA5u ^ i); }
 
 // global variables
 uint8_t expansion_type = 0;
@@ -76,19 +86,40 @@ uint16_t uppermembanks = 0;       // number of upper memory banks
 int main(void) {
     init();
 
+    // reset passed tests array
+    memset(test_passed, 0x00, 5);
+
     // perform test on high memory
     ram_test_01();
 
     // if there are no high memory banks, stop here
     if(highmemsectors != 0) {
-        ram_test_02();
+        ram_test_02();        
         ram_test_03();
         ram_test_04();
         ram_test_05();
+        ram_test_06();
+        ram_test_07();
     }
 
     print_info("",0);   // print empty line
-    print_inline_color("ALL DONE PERFORMING RAM TESTS", COL_CYAN);
+    print_inline_color("-= ALL DONE PERFORMING RAM TESTS =-", COL_CYAN);
+
+    // show summary
+    print_info("",0);   // print empty line
+    print_inline_color("-= SUMMARY =-", COL_CYAN);
+    char buf[50];
+    for(uint8_t i=0; i<5; i++) {
+        if(test_passed[i] == 0) {
+            sprintf(buf, "  * TEST %u: %cPASSED%c", i+1, COL_GREEN, COL_WHITE);
+            print_info(buf, 0);
+        } else {
+            sprintf(buf, "  * TEST %u: %cFAILED%c; %u ERROR(S) ENCOUNTERED", i+1, COL_RED, COL_WHITE, test_passed[i]);
+            print_info(buf, 0);
+        }
+        
+    }
+    write_stack_pointer();
 
     // put in infinite loop
     for(;;){}
@@ -140,148 +171,42 @@ void ram_test_01(void) {
  * This test is also used to determine which type of expansion board the user has.
  */
 void ram_test_02(void) {
-    
-    // no bank switching
-    set_bank(0);
-    memory[0xE000] = (1 << 4);
-    memory[0xF000] = (1 << 5);
-    if(memory[0xE000] == (1 << 4) && memory[0xF000] == (1 << 5)) {
-        uppermembanks++;
-        print_info("  Upper memory accessible", 0);
-    }
+    print_info("Test 2: Determine number of RAM banks", 0);
+    uppermembanks = count_banks();
+    sprintf(termbuffer, "%c%u%c RAM banks found", COL_CYAN, uppermembanks, COL_WHITE);
+    terminal_printtermbuffer();
 
-    if(uppermembanks == 0) {
-        expansion_type = MEMEXP16;
-        print_inline_color("16 kb memory expansion detected.", COL_GREEN);
-        return;
-    }
-
-    // test for initial 6 bank switching
-    print_info("Test 2: Bank switching", 0);
-    for(uint8_t i=1; i<6; i++) {
-        set_bank(i);
-        memory[0xE000] = i | (1 << 4);
-        memory[0xF000] = i | (1 << 5);
-    }
-
-    for(uint8_t i=1; i<6; i++) {
-        set_bank(i);
-        if(memory[0xE000] == (i | (1 << 4)) && memory[0xF000] == (i | (1 << 5))) {
-            uppermembanks++;
-        }        
-    }
-    
-    if(uppermembanks == 1) {
-        expansion_type = MEMEXP24;
-        print_inline_color("24 kb memory expansion detected.", COL_GREEN);
-        return;
-    } else {
-        print_info("  Banks 0 - 5 verified", 0);
-    }
-
-    // check whether this assessment can be continued to 14 banks
-    for(uint8_t i=6; i<14; i++) {
-        set_bank(i);
-        memory[0xE000] = i;
-        memory[0xF000] = i | 0x80;
-    }
-
-    // read back and test
-    for(uint8_t i=6; i<14; i++) {
-        set_bank(i);
-        if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
-            uppermembanks++;
-        } else { // early exit when not possible to avoid generating false positives
-            break;
-        }
-    }
-
-    if(uppermembanks == 6) {
-        expansion_type = MEMEXP64;
-        print_inline_color("64 kb expansion card detected", COL_GREEN);
-        return;
-    } else if(uppermembanks == 14) {
-        print_info("  Banks 6 - 13 verified", 0);
-    }
-
-    // check whether this assessment can be continued to 128 banks
-    for(uint8_t i=14; i<128; i++) {
-        set_bank(i);
-        memory[0xE000] = i;
-        memory[0xF000] = i | 0x80;
-    }
-
-    // read back and test
-    for(uint8_t i=14; i<128; i++) {
-        set_bank(i);
-        if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
-            uppermembanks++;
-        } else { // early exit when not possible to avoid generating false positives
-            break;
-        }
-    }
-
-    if(uppermembanks == 14) {
-        expansion_type = MEMEXP128;
-        print_inline_color("128 kb expansion card detected", COL_GREEN);
-        return;
-    } else if(uppermembanks == 128) {
-        print_info("  Banks 14 - 127 verified", 0);
-    }
-
-    // there might be bank switching on for upper memory via the MSB on the
-    // bank register, test this before proceeding to testing another 128 blocks
-    if(uppermembanks == 128) { // 1Mb+ or 2Mb+ ram expansion
-        // write 0x55 to 0xA000-0xDFFF bank 0
-        set_bank(0x00);
-        memory[0xA000] = 0x55;
-        // write 0xAA to 0xA000-0xDFFF bank 1
-        set_bank((uint8_t)(1 << 7));
-        memory[0xA000] = 0xAA;
-
-        set_bank(0x00);
-        uint8_t exp128_test1 = memory[0xA000] == 0x55 ? 0 : 1;
-        set_bank((uint8_t)(1 << 7));
-        uint8_t exp128_test2 = memory[0xA000] == 0xAA ? 0 : 1;
-
-        if(exp128_test1 == 0 && exp128_test2 == 0) {
-            highmembanks = 1;
-            expansion_type = MEMEXP1056;
-            print_inline_color("1056 kb expansion card detected", COL_GREEN);
-        } else {    // test for 2Mb+ expansion
-            for(uint8_t i=255; i>=128; i--) {
-                set_bank(i);
-                memory[0xE000] = i;
-                memory[0xF000] = i | 0x80;
-            }
-
-            for(uint8_t i=255; i>=128; i--) {
-                set_bank(i);
-                if(memory[0xE000] == i && memory[0xF000] == (i | 0x80)) {
-                    uppermembanks++;
-                } else {  // early exit when not possible to avoid generating false positives
-                    break;
-                }
-            }
-
-            // write 0x55 to 0xA000-0xDFFF bank 0
-            set_bank_highmem(0x00);
-            memory[0xA000] = 0x55;
-            // write 0xAA to 0xA000-0xDFFF bank 1
-            set_bank_highmem(0x01);
-            memory[0xA000] = 0xAA;
-
-            set_bank_highmem(0x00);
-            uint8_t exp256_test1 = memory[0xA000] == 0x55 ? 0 : 1;
-            set_bank_highmem(0x01);
-            uint8_t exp256_test2 = memory[0xA000] == 0xAA ? 0 : 1;
-
-            if(exp256_test1 == 0 && exp256_test2 == 0) {
-                highmembanks = 1;
-                expansion_type = MEMEXP2080;
-                print_inline_color("2080 kb expansion card detected", COL_GREEN);
-            }
-        }
+    switch(uppermembanks) {
+        case 0:
+            print_inline_color("16 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 1:
+            print_inline_color("32 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 6:
+            print_inline_color("64 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 14:
+            print_inline_color("128 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 30:
+            print_inline_color("256 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 46:
+            print_inline_color("384 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 62:
+            print_inline_color("512 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 128:
+            print_inline_color("1056 KiB memory expansion detected", COL_CYAN);
+        break;
+        case 256:
+            print_inline_color("2080 KiB memory expansion detected", COL_CYAN);
+        break;
+        default:
+            print_inline_color("Unknown memory expansion, please inform developer", COL_RED);
+        break;
     }
 }
 
@@ -319,11 +244,15 @@ void ram_test_03(void) {
 */
 void ram_test_04(void) {
     set_bank(0);
-    print_info("Test 3: Lower and higher memory", 0);
+    print_info("Test 4: Lower and higher memory", 0);
     memset(&memory[LOWMEM], 0x55, STACK - LOWMEM);
     uint16_t lowmem_count = count_ram_bytes(&memory[LOWMEM], 0x55, STACK - LOWMEM);
     memset(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
     lowmem_count += count_ram_bytes(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
+    memset(&memory[LOWMEM], 0x00, STACK - LOWMEM);
+    lowmem_count += count_ram_bytes(&memory[LOWMEM], 0x00, STACK - LOWMEM);
+    memset(&memory[LOWMEM], 0xFF, STACK - LOWMEM);
+    lowmem_count += count_ram_bytes(&memory[LOWMEM], 0xFF, STACK - LOWMEM);
 
     if(lowmem_count == 0) {
         sprintf(termbuffer, "  0x%04X - 0x%04X: %cOK", LOWMEM, STACK-1, COL_GREEN);
@@ -336,11 +265,15 @@ void ram_test_04(void) {
     uint16_t uppermem_count = count_ram_bytes(&memory[HIGHMEM_START], 0x55, HIGHMEM_STOP - HIGHMEM_START);
     memset(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START - 1);
     uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START);
+    memset(&memory[HIGHMEM_START], 0x00, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0x00, HIGHMEM_STOP - HIGHMEM_START);
+    memset(&memory[HIGHMEM_START], 0xFF, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0xFF, HIGHMEM_STOP - HIGHMEM_START);
 
     if(uppermem_count == 0) {
-        sprintf(termbuffer, "  %04X - %04X: %cOK", HIGHMEM_START, HIGHMEM_STOP, COL_GREEN);
+        sprintf(termbuffer, "  0x%04X - 0x%04X: %cOK", HIGHMEM_START, HIGHMEM_STOP, COL_GREEN);
     } else {
-        sprintf(termbuffer, "  %04X - %04X: %c%u miscounts", HIGHMEM_START, HIGHMEM_STOP, COL_RED, uppermem_count);
+        sprintf(termbuffer, "  0x%04X - 0x%04X: %c%u miscounts", HIGHMEM_START, HIGHMEM_STOP, COL_RED, uppermem_count);
     }
     terminal_printtermbuffer();
 }
@@ -357,8 +290,9 @@ void ram_test_05(void) {
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
-        memset(&memory[BANKMEM_START], 0x55 + i, BANKMEM_STOP - BANKMEM_START + 1);
-        sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_CYAN, i, COL_WHITE);
+        uint8_t t = tag_byte(0x00, (uint8_t)i);
+        memset(&memory[BANKMEM_START], t, BANKMEM_STOP - BANKMEM_START + 1);
+        write_termbuffer_value((uint8_t)i, COL_CYAN);
 
         if((i+1) % 8 == 0) {
             terminal_printtermbuffer();
@@ -374,11 +308,13 @@ void ram_test_05(void) {
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
-        uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], 0x55 + i, BANKMEM_STOP - BANKMEM_START + 1);
+        uint8_t t = tag_byte(0x00, (uint8_t)i);
+        uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], t, BANKMEM_STOP - BANKMEM_START + 1);
         if(miscounts == 0) {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_GREEN, i, COL_WHITE);
+            write_termbuffer_value(i, COL_GREEN);
         } else {
-            sprintf(&termbuffer[(i % 8) * 4], "%c%02X", COL_RED, i, COL_WHITE);
+            write_termbuffer_value((uint8_t)i, COL_RED);
+            test_passed[0]++;
         }
 
         if((i+1) % 8 == 0) {
@@ -392,31 +328,28 @@ void ram_test_05(void) {
     }
 }
 
-/**
- * @brief Set the bank in memory, informs the user in a status bar and writes
- *        the current position of the stack pointer to the screen
- * 
- * @param bank id
+/*
+ * Test 6: Checkerboard test
+ * ===================================
+ *
+ * Check that memory is conserved upon bank switching
  */
-void set_bank(uint8_t bank) {
-    z80_outp(0x94, bank);
+void ram_test_06(void) {   
+    print_info("Test 6: Checkerboard test", 0);
+    test_fixed_pattern(0x55, 1);
+    test_fixed_pattern(0xAA, 2);
+}
 
-    // placeholder for bit pattern (terminating char = 0)
-    uint8_t char_bits[9] = {' ',' ',' ',' ',' ',' ',' ',' ',0};
-
-    // build bit pattern
-    for(uint8_t i=0; i<8; i++) {
-        if((bank & (1 << i)) != 0) {
-            char_bits[7-i] = GRAPH_BLOCK;
-        } else {
-            char_bits[7-i] = ' '; // write space
-        }
-    }
-
-    memset(vidmem, 0, 40);
-    vidmem[0x00] = COL_MAGENTA;
-    sprintf(&vidmem[1], "Bank register: |%s| (%i)", char_bits, bank);
-    write_stack_pointer();
+/*
+ * Test 7: Stuck-at-transition
+ * ===================================
+ *
+ * Check that memory is conserved upon bank switching
+ */
+void ram_test_07(void) {   
+    print_info("Test 7: Stuck at transition", 0);
+    test_fixed_pattern(0x00, 3);
+    test_fixed_pattern(0xFF, 4);
 }
 
 void set_bank_highmem(uint8_t bank) {
@@ -433,12 +366,112 @@ uint8_t read_bank(void) {
 }
 
 /**
- * @brief Writes the current stack position to the screen
+ * Perform a series of simple read/write tests on banks to determine the total
+ * number of banks.
  */
-void write_stack_pointer(void) {
-    uint16_t stackptr = get_stack_pointer();
-    vidmem[0x50] = COL_MAGENTA;
-    sprintf(&vidmem[0x50+1], "Stack pointer: %04X", stackptr);
+uint8_t test_bank_helper(uint8_t startbank, uint8_t stopbank, uint8_t *uppermembanks,
+                        uint8_t *expansion_type, uint8_t banktypefail, uint16_t szdetect) {
+    
+    char buf[50];
+
+    // write test bit to new banks to be probed
+    for(uint8_t i=startbank; i<stopbank; i++) {
+        set_bank(i);
+        memory[0xE000] = i;
+        memory[0xF000] = i | 0x80;
+    }
+
+    // read back and test
+    for(uint8_t i=startbank; i<stopbank; i++) {
+        set_bank(i);
+        if(memory[0xE000] == i && 
+           memory[0xF000] == (i | 0x80)) {
+            (*uppermembanks)++;
+        } else { // early exit when not possible to avoid generating false positives
+            break;
+        }
+    }
+
+    // analyse results
+    if((*uppermembanks) != stopbank) {
+        (*expansion_type) = banktypefail;
+        sprintf(buf, "%u KiB expansion card detected", szdetect);
+        print_inline_color(buf, COL_GREEN);
+        return 1;
+    } else {
+        sprintf(termbuffer, "  Banks %u - %u probed", startbank, stopbank-1);
+        terminal_printtermbuffer();
+        return 0;
+    }
+}
+
+/**
+ * Apply a fixed byte pattern to a set of RAM banks and verify whether these can be
+ * read back.
+ */
+void test_fixed_pattern(uint8_t pattern, uint8_t check_id) {
+    sprintf(termbuffer, "  Writing 0x%02X to banks", pattern);
+    terminal_printtermbuffer();
+    uint8_t miscounts = 0;
+
+    for(uint16_t i=0; i<uppermembanks; i++) {
+        set_bank(i);
+        memset(&memory[BANKMEM_START], pattern, BANKMEM_STOP - BANKMEM_START + 1);
+        write_termbuffer_value((uint8_t)i, COL_CYAN);
+
+        if((i+1) % 8 == 0) {
+            terminal_printtermbuffer();
+        }
+    }
+
+    // also print result when total is not divisible by 8
+    if(uppermembanks % 8 != 0) {
+        terminal_printtermbuffer();
+    }
+
+    sprintf(termbuffer, "  Testing 0x%02X on banks", pattern);
+    terminal_printtermbuffer();
+
+    for(uint16_t i=0; i<uppermembanks; i++) {
+        set_bank(i);
+        uint16_t miscounts_bank = count_ram_bytes(&memory[BANKMEM_START], pattern, BANKMEM_STOP - BANKMEM_START + 1);
+        if(miscounts_bank == 0) {
+            write_termbuffer_value((uint8_t)i, COL_GREEN);
+        } else {
+            write_termbuffer_value((uint8_t)i, COL_RED);
+            test_passed[check_id]++;
+        }
+
+        if((i+1) % 8 == 0) {
+            terminal_printtermbuffer();
+        }
+    }
+
+    // also print result when total is not divisible by 8
+    if(uppermembanks % 8 != 0) {
+        terminal_printtermbuffer();
+    }
+}
+
+static inline char hex1(uint8_t v) {
+    static const char hexd[] = "0123456789ABCDEF";  // size = 17 (includes '\0')
+    return hexd[v & 0xF];
+}
+
+/**
+ * Helper function to write 4-byte colored hex value to string buffer;
+ * used to indicate RAM banks.
+ */
+void write_termbuffer_value(uint8_t i, uint8_t color) {
+    // 4 visible chars + NUL; we intentionally copy 5 bytes into a 4-byte slot
+    // so the NUL becomes the first byte of the next cell.
+    char tmp[5];
+    tmp[0] = (char)color;
+    tmp[1] = hex1((uint8_t)(i >> 4));
+    tmp[2] = hex1((uint8_t)i);
+    tmp[3] = (char)COL_WHITE;
+    tmp[4] = '\0';
+    memcpy(&termbuffer[(i % 8) * 4], tmp, 5);
 }
 
 /**
@@ -455,7 +488,7 @@ void init(void) {
     sprintf(termbuffer, "%c>%c", COL_CYAN, COL_WHITE);
     terminal_redoline();
     
-    set_bank(0);    // always set bank 0 upon initialization
+    set_bank(0);    // always set bank 0 upon initializati`on
     sprintf(&vidmem[0x50*22], "Version: %s", __VERSION__);
     sprintf(&vidmem[0x50*23], "Compiled at: %s / %s", __DATE__, __TIME__);
 }

@@ -18,17 +18,13 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _STACK
-#define _STACK
+#include "stack.h"
 
-#include <stdint.h>
-#include <stdio.h>
-
-#include "constants.h"
-#include "memory.h"
-
-uint16_t get_stack_pointer(void) __z88dk_callee;
-
-void write_stack_pointer(void);
-
-#endif // _STACK
+/**
+ * @brief Writes the current stack position to the screen
+ */
+void write_stack_pointer(void) {
+    uint16_t stackptr = get_stack_pointer();
+    vidmem[0x50] = COL_MAGENTA;
+    sprintf(&vidmem[0x50+1], "Stack pointer: %04X", stackptr);
+}

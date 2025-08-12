@@ -16,12 +16,12 @@
 * [Bill of materials](#bill-of-materials)
 * [Testing bank switching in BASIC](#testing-bank-switching-in-basic)
 * [Files](#files)
-* [128 KiB expansion](#128-kib-expansion)
-  * [SMD version](#smd-version)
-  * [CPLD version](#cpld-version)
-* [Large memory expansion cards](#large-memory-expansion-cards)
-  * [1056 KiB expansion](#1056-kib-expansion)
-  * [2080 KiB expansion](#2080-kib-expansion)
+* [Alternative RAM expansions](#alternative-ram-expansions)
+  * [SMD-128KiB version](#smd-128kib-version)
+  * [SMD-CPLD-128KiB version](#smd-cpld-128kib-version)
+  * [SMD-CPLD-512KiB version](#smd-cpld-512kib-version)
+  * [THT-1056 KiB expansion](#tht-1056-kib-expansion)
+  * [THT-2080 KiB expansion](#tht-2080-kib-expansion)
 * [License](#license)
 
 > [!TIP] 
@@ -59,12 +59,12 @@ The memory lay-out of the P2000T is organized as shown in the table below
 | 0xE000-0xFFFF | 8 KiB banks      |
 
 For the default 16 KiB stock model, only the memory at `0x6000-0x9FFF` is
-available. This expansion board adds 64k memory such that an additional 16 KiB
-of RAM is available at `0xA000-0xDFFF` and another 48 KiB using bank switching.
-Bank switching means that you can only access 8 KiB of the 48 KiB at a time,
-depending on the value of a register which can be accessed via an `OUT`
-instruction at `0x94`. This register can hold values of `0-5`, amounting
-to 6x8 KiB = 48 KiB of bankable memory.
+available. The most simple expansion board adds 64k memory such that an
+additional 16 KiB of RAM is available at `0xA000-0xDFFF` and another 48 KiB
+using bank switching. Bank switching means that you can only access 8 KiB of the
+48 KiB at a time, depending on the value of a register which can be accessed via
+an `OUT` instruction at `0x94`. This register can hold values of `0-5`,
+amounting to 6x8 KiB = 48 KiB of bankable memory.
 
 ## Installation
 
@@ -181,9 +181,9 @@ expected to be a zero on a fresh boot of the machine.
 * [KiCad schematics](pcb/p2000t-ram-expansion-board)
 * [RAM tester utility](ramtester)
 
-## 128 KiB expansion
+## Alternative RAM expansions
 
-### SMD version
+### SMD-128KiB version
 
 Next to the 64 KiB memory expansion using
 [DIP](https://en.wikipedia.org/wiki/Dual_in-line_package) chips, there is also a
@@ -215,14 +215,14 @@ The source files for this board can be found
 
 ![Installed 1056 KiB RAM board](img/ram_expansion_board_128_03.jpg)
 
-### CPLD version
+### SMD-CPLD-128KiB version
 
 To cut down costs even further, there is also a CUPL version. Besides the
 `CY62128ELL-45SX`, the PCB only hosts one other chip: a `ATF1502`. All glue
 logic required for the RAM expansion board is basically programmed on this chip.
 
 The source files for this board can be found
-[here](pcb/p2000t-ram-expansion-board-128kb-smd-cpld/).
+[here](pcb/p2000t-ram-expansion-board-128-512-smd-cpld).
 
 **Unpopulated PCB**
 
@@ -232,13 +232,23 @@ The source files for this board can be found
 
 ![Populated RAM board](img/ram_expansion_board_128_cpld-02.jpg)
 
-## Large memory expansion cards
+### SMD-CPLD-512KiB version
 
-Besides the 64 KiB expansion, this repository also contains two specialty
-versions of the RAM expansion card providing 1056 KiB or 2080 KiB of additional
-memory.
+Moving beyond the 128 KiB limit, there is also a versatile SMD-type board
+that admits 1-4 `CY62128ELL-45SX` 128 KiB memory chips.
 
-### 1056 KiB expansion
+The source files for this board can be found
+[here](pcb/p2000t-ram-expansion-board-128-512-smd-cpld).
+
+**Installed PCB**
+
+![Installed RAM board](img/ram_expansion_board_512_01.jpg)
+
+**Populated PCB**
+
+![Populated RAM board](img/ram_expansion_board_512_02.jpg)
+
+### THT-1056 KiB expansion
 
 This board uses a single 32 KiB static RAM chip to provide 2x16 KiB on
 `0xA000-0xDFFF` and two 512 KiB static RAM chips to provide another 128x8 KiB on
@@ -261,7 +271,7 @@ The source files for this board can be found
 
 ![Installed 1056 KiB RAM board](img/ram_expansion_board_1056_01.jpg)
 
-### 2080 KiB expansion
+### THT-2080 KiB expansion
 
 This board uses a single 32 KiB static RAM chip to provide 2x16 KiB on
 `0xA000-0xDFFF` and four 512 KiB static RAM chips to provide another 256x8 KiB
