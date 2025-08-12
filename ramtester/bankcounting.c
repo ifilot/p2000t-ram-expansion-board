@@ -94,7 +94,7 @@ uint16_t count_banks(void) {
         }
 
         // Select and tag this candidate
-        z80_outp(0x94, (uint8_t)s);
+        set_bank((uint8_t)s);
         write_signature((uint8_t)s);
 
         #ifdef DEBUG

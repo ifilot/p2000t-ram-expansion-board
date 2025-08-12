@@ -103,18 +103,18 @@ int main(void) {
     }
 
     print_info("",0);   // print empty line
-    print_inline_color("ALL DONE PERFORMING RAM TESTS", COL_CYAN);
+    print_inline_color("-= ALL DONE PERFORMING RAM TESTS =-", COL_CYAN);
 
     // show summary
     print_info("",0);   // print empty line
-    print_inline_color(" -= SUMMARY =-", COL_CYAN);
+    print_inline_color("-= SUMMARY =-", COL_CYAN);
     char buf[50];
     for(uint8_t i=0; i<5; i++) {
         if(test_passed[i] == 0) {
-            sprintf(buf, "TEST %u: %cPASSED%c", i+1, COL_GREEN, COL_WHITE);
+            sprintf(buf, "  * TEST %u: %cPASSED%c", i+1, COL_GREEN, COL_WHITE);
             print_info(buf, 0);
         } else {
-            sprintf(buf, "TEST %u: %cFAILED%c; %u ERROR(S) ENCOUNTERED", i+1, COL_RED, COL_WHITE, test_passed[i]);
+            sprintf(buf, "  * TEST %u: %cFAILED%c; %u ERROR(S) ENCOUNTERED", i+1, COL_RED, COL_WHITE, test_passed[i]);
             print_info(buf, 0);
         }
         
@@ -173,39 +173,39 @@ void ram_test_01(void) {
 void ram_test_02(void) {
     print_info("Test 2: Determine number of RAM banks", 0);
     uppermembanks = count_banks();
-    sprintf(termbuffer, " %c%u%c RAM banks found", COL_CYAN, uppermembanks, COL_WHITE);
+    sprintf(termbuffer, "%c%u%c RAM banks found", COL_CYAN, uppermembanks, COL_WHITE);
     terminal_printtermbuffer();
 
     switch(uppermembanks) {
         case 0:
-            print_inline_color(" 16 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("16 KiB memory expansion detected", COL_CYAN);
         break;
         case 1:
-            print_inline_color(" 32 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("32 KiB memory expansion detected", COL_CYAN);
         break;
         case 6:
-            print_inline_color(" 64 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("64 KiB memory expansion detected", COL_CYAN);
         break;
         case 14:
-            print_inline_color(" 128 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("128 KiB memory expansion detected", COL_CYAN);
         break;
         case 30:
-            print_inline_color(" 256 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("256 KiB memory expansion detected", COL_CYAN);
         break;
         case 46:
-            print_inline_color(" 384 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("384 KiB memory expansion detected", COL_CYAN);
         break;
         case 62:
-            print_inline_color(" 512 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("512 KiB memory expansion detected", COL_CYAN);
         break;
         case 128:
-            print_inline_color(" 1056 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("1056 KiB memory expansion detected", COL_CYAN);
         break;
         case 256:
-            print_inline_color(" 2080 KiB memory expansion detected", COL_CYAN);
+            print_inline_color("2080 KiB memory expansion detected", COL_CYAN);
         break;
         default:
-            print_inline_color(" Unknown memory expansion, please inform developer", COL_RED);
+            print_inline_color("Unknown memory expansion, please inform developer", COL_RED);
         break;
     }
 }
@@ -249,6 +249,10 @@ void ram_test_04(void) {
     uint16_t lowmem_count = count_ram_bytes(&memory[LOWMEM], 0x55, STACK - LOWMEM);
     memset(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
     lowmem_count += count_ram_bytes(&memory[LOWMEM], 0xAA, STACK - LOWMEM);
+    memset(&memory[LOWMEM], 0x00, STACK - LOWMEM);
+    lowmem_count += count_ram_bytes(&memory[LOWMEM], 0x00, STACK - LOWMEM);
+    memset(&memory[LOWMEM], 0xFF, STACK - LOWMEM);
+    lowmem_count += count_ram_bytes(&memory[LOWMEM], 0xFF, STACK - LOWMEM);
 
     if(lowmem_count == 0) {
         sprintf(termbuffer, "  0x%04X - 0x%04X: %cOK", LOWMEM, STACK-1, COL_GREEN);
@@ -261,11 +265,15 @@ void ram_test_04(void) {
     uint16_t uppermem_count = count_ram_bytes(&memory[HIGHMEM_START], 0x55, HIGHMEM_STOP - HIGHMEM_START);
     memset(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START - 1);
     uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0xAA, HIGHMEM_STOP - HIGHMEM_START);
+    memset(&memory[HIGHMEM_START], 0x00, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0x00, HIGHMEM_STOP - HIGHMEM_START);
+    memset(&memory[HIGHMEM_START], 0xFF, HIGHMEM_STOP - HIGHMEM_START - 1);
+    uppermem_count += count_ram_bytes(&memory[HIGHMEM_START], 0xFF, HIGHMEM_STOP - HIGHMEM_START);
 
     if(uppermem_count == 0) {
-        sprintf(termbuffer, "  %04X - %04X: %cOK", HIGHMEM_START, HIGHMEM_STOP, COL_GREEN);
+        sprintf(termbuffer, "  0x%04X - 0x%04X: %cOK", HIGHMEM_START, HIGHMEM_STOP, COL_GREEN);
     } else {
-        sprintf(termbuffer, "  %04X - %04X: %c%u miscounts", HIGHMEM_START, HIGHMEM_STOP, COL_RED, uppermem_count);
+        sprintf(termbuffer, "  0x%04X - 0x%04X: %c%u miscounts", HIGHMEM_START, HIGHMEM_STOP, COL_RED, uppermem_count);
     }
     terminal_printtermbuffer();
 }
@@ -282,7 +290,8 @@ void ram_test_05(void) {
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
-        memset(&memory[BANKMEM_START], 0x55 | i, BANKMEM_STOP - BANKMEM_START + 1);
+        uint8_t t = tag_byte(0x00, (uint8_t)i);
+        memset(&memory[BANKMEM_START], t, BANKMEM_STOP - BANKMEM_START + 1);
         write_termbuffer_value((uint8_t)i, COL_CYAN);
 
         if((i+1) % 8 == 0) {
@@ -299,7 +308,8 @@ void ram_test_05(void) {
 
     for(uint16_t i=0; i<uppermembanks; i++) {
         set_bank(i);
-        uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], 0x55 | i, BANKMEM_STOP - BANKMEM_START + 1);
+        uint8_t t = tag_byte(0x00, (uint8_t)i);
+        uint16_t miscounts = count_ram_bytes(&memory[BANKMEM_START], t, BANKMEM_STOP - BANKMEM_START + 1);
         if(miscounts == 0) {
             write_termbuffer_value(i, COL_GREEN);
         } else {
