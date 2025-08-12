@@ -18,17 +18,25 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _STACK
-#define _STACK
+#ifndef _BANK_COUNTING_H
+#define _BANK_COUNTING_H
 
 #include <stdint.h>
-#include <stdio.h>
+#include <z80.h>
 
-#include "constants.h"
-#include "memory.h"
+#include "config.h"
+#include "terminal.h"
+#include "stack.h"
 
-uint16_t get_stack_pointer(void) __z88dk_callee;
+#define NR_SENTINELS    2
+#define MAX_SELECTORS 256
 
-void write_stack_pointer(void);
+void set_bank(uint8_t bank);
 
-#endif // _STACK
+// Simple per-(selector,idx) tag: varied across locations, XOR with selector.
+uint8_t tag_byte(uint8_t selector, uint8_t idx);
+void write_signature(uint8_t selector);
+uint8_t verify_signature(uint8_t selector);
+uint16_t count_banks(void);
+
+#endif

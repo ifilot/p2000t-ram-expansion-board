@@ -23,4 +23,7 @@
 
 #define __VERSION__ "0.7.0"
 
+#define TRUE  1
+#define FALSE 0
+
 #endif
