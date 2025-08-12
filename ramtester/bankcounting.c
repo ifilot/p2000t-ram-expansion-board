@@ -20,17 +20,24 @@
 
 #include "bankcounting.h"
 
-// Spread sentinels across the 8KB banked window (E000–FFFF).
-// Each sentinel uses two bytes: addr holds TAG, addr+1 holds ~TAG.
+/**
+ * Define the set of memory addresses which are used for alias probing
+ */
 static const uint16_t sentinels[NR_SENTINELS] = {
     0xE000, 0xF000
 };
 
-// Simple per-(selector,idx) tag: varied across locations, XOR with selector.
+
+/**
+ * Construct unique identifier byte
+ */
 uint8_t tag_byte(uint8_t selector, uint8_t idx) {
     return (uint8_t)((0x5Au + 0x13u * idx) ^ selector);
 }
 
+/**
+ * Write signature to sentinel addresses on bank identified by selector
+ */
 void write_signature(uint8_t selector) {
     for (uint8_t i = 0; i < NR_SENTINELS; ++i) {
         volatile uint8_t *p = (volatile uint8_t *)(sentinels[i]);
@@ -40,7 +47,9 @@ void write_signature(uint8_t selector) {
     }
 }
 
-// Returns true if signature for `selector` matches at all sentinels.
+/**
+ * Checks for all sentinel addresses whether the value is correctly returned
+ */
 uint8_t verify_signature(uint8_t selector) {
     for (uint8_t i = 0; i < NR_SENTINELS; ++i) {
         volatile uint8_t *p = (volatile uint8_t *)(sentinels[i]);
@@ -53,6 +62,12 @@ uint8_t verify_signature(uint8_t selector) {
     return TRUE;
 }
 
+/**
+ * Count the number of banks by writing a tag value to sentinel addresses. Next,
+ * all other banks are screened for aliasing. If an alias is encountered, this means
+ * that we have 'wrapped around' in the bank bits and thus no new banks are found.
+ * This function performs early exit.
+ */
 uint16_t count_banks(void) {
     static uint8_t reps[MAX_SELECTORS];   // avoid stack use
     uint16_t repcnt = 0;
